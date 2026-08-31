@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hackshelf-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hackshelf}
+      POSTGRES_USER: ${POSTGRES_USER:-hackshelf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hackshelf_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-hackshelf}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: hackshelf-backend
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-hackshelf}:${POSTGRES_PASSWORD:-hackshelf_dev_password}@postgres:5432/${POSTGRES_DB:-hackshelf}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_me}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_secret_change_me}
+      ACCESS_TOKEN_EXPIRES: ${ACCESS_TOKEN_EXPIRES:-15m}
+      REFRESH_TOKEN_EXPIRES: ${REFRESH_TOKEN_EXPIRES:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: hackshelf-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
