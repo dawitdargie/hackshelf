@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"hackshelf/backend/internal/auth"
+	"hackshelf/backend/internal/books"
 	"hackshelf/backend/internal/config"
 	"hackshelf/backend/internal/database"
 	"hackshelf/backend/internal/email"
@@ -19,6 +20,7 @@ type Router struct {
 	cfg            *config.Config
 	authHandler    *auth.AuthHandler
 	tokenHandler   *auth.TokenHandler
+	bookHandler    *books.BookHandler
 	authMiddleware func(http.Handler) http.Handler
 	handler        http.Handler
 }
@@ -52,12 +54,18 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 	tokenHandler := auth.NewTokenHandler(authService)
 	authMiddleware := auth.AuthMiddleware(cfg.JWTAccessSecret)
 
+	// Build book dependencies (Phase 7)
+	bookRepo := books.NewBookRepository(db.Pool)
+	chapterRepo := books.NewChapterRepository(db.Pool)
+	bookHandler := books.NewBookHandler(books.NewBookService(bookRepo, chapterRepo))
+
 	r := &Router{
 		mux:            http.NewServeMux(),
 		db:             db,
 		cfg:            cfg,
 		authHandler:    authHandler,
 		tokenHandler:   tokenHandler,
+		bookHandler:    bookHandler,
 		authMiddleware: authMiddleware,
 	}
 	r.registerRoutes()
@@ -88,6 +96,12 @@ func (r *Router) registerRoutes() {
 	// Authenticated routes
 	r.mux.Handle("POST /api/v1/auth/logout", r.authMiddleware(http.HandlerFunc(r.tokenHandler.Logout)))
 	r.mux.Handle("GET /api/v1/me", r.authMiddleware(http.HandlerFunc(r.tokenHandler.Me)))
+
+	// Public book routes (Phase 7)
+	r.mux.HandleFunc("GET /api/v1/books", r.bookHandler.List)
+	r.mux.HandleFunc("GET /api/v1/books/{slug}", r.bookHandler.GetBySlug)
+	r.mux.HandleFunc("GET /api/v1/books/{slug}/chapters", r.bookHandler.ListChapters)
+	r.mux.HandleFunc("GET /api/v1/books/{slug}/chapters/{chapterSlug}", r.bookHandler.GetChapter)
 }
 
 // handleHealth returns the health status of the API.
