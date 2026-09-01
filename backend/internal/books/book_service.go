@@ -30,13 +30,31 @@ func NewBookService(repo *BookRepository, chapterRepo *ChapterRepository) *BookS
 	return &BookService{repo: repo, chapterRepo: chapterRepo}
 }
 
-// List validates pagination and returns one page of book summaries with meta.
-func (s *BookService) List(ctx context.Context, pageStr, limitStr string) ([]BookSummary, PaginationMeta, *middleware.AppError) {
-	page, appErr := parsePositiveInt(pageStr, defaultPage, "page")
+// QueryParams are the raw query-string parameters for the book list endpoint.
+type QueryParams struct {
+	Search   string
+	Level    string
+	Category string
+	Topic    string
+	Rating   string
+	Sort     string
+	Page     string
+	Limit    string
+}
+
+// minRatingValue/maxRatingValue bound the rating filter (API spec §12).
+const (
+	minRatingValue = 1.0
+	maxRatingValue = 5.0
+)
+
+// List validates query params and returns one filtered page with meta.
+func (s *BookService) List(ctx context.Context, p QueryParams) ([]BookSummary, PaginationMeta, *middleware.AppError) {
+	page, appErr := parsePositiveInt(p.Page, defaultPage, "page")
 	if appErr != nil {
 		return nil, PaginationMeta{}, appErr
 	}
-	limit, appErr := parsePositiveInt(limitStr, defaultLimit, "limit")
+	limit, appErr := parsePositiveInt(p.Limit, defaultLimit, "limit")
 	if appErr != nil {
 		return nil, PaginationMeta{}, appErr
 	}
@@ -47,7 +65,52 @@ func (s *BookService) List(ctx context.Context, pageStr, limitStr string) ([]Boo
 		return nil, PaginationMeta{}, middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "page is too large")
 	}
 
-	summaries, total, err := s.repo.List(ctx, page, limit)
+	q := BookQuery{Search: p.Search, LevelSlug: p.Level, CategorySlug: p.Category, TopicSlug: p.Topic, Page: page, Limit: limit}
+
+	// Sort: whitelist validation, default newest.
+	sortOpt, appErr := validateSort(p.Sort)
+	if appErr != nil {
+		return nil, PaginationMeta{}, appErr
+	}
+	q.Sort = sortOpt
+
+	// Rating: numeric, within [1,5].
+	minRating, appErr := parseRating(p.Rating)
+	if appErr != nil {
+		return nil, PaginationMeta{}, appErr
+	}
+	q.MinRating = minRating
+
+	// Filter slugs must be syntactically valid and exist.
+	type slugCheck struct {
+		name   string
+		value  string
+		exists func(context.Context, string) (bool, error)
+	}
+	for _, c := range []slugCheck{
+		{"level", p.Level, s.repo.LevelSlugExists},
+		{"category", p.Category, s.repo.CategorySlugExists},
+		{"topic", p.Topic, s.repo.TopicSlugExists},
+	} {
+		v := strings.TrimSpace(c.value)
+		if v == "" {
+			continue
+		}
+		if !slugRegex.MatchString(v) {
+			return nil, PaginationMeta{}, invalidSlugError()
+		}
+		ok, err := c.exists(ctx, v)
+		if err != nil {
+			return nil, PaginationMeta{}, internalError()
+		}
+		if !ok {
+			return nil, PaginationMeta{}, middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "unknown "+c.name+": "+v)
+		}
+	}
+	// Assign trimmed slugs.
+	q.LevelSlug, q.CategorySlug, q.TopicSlug = strings.TrimSpace(p.Level), strings.TrimSpace(p.Category), strings.TrimSpace(p.Topic)
+
+	summaries, total, err := s.repo.List(ctx, q)
 	if err != nil {
 		return nil, PaginationMeta{}, internalError()
 	}
@@ -151,6 +214,34 @@ func parsePositiveInt(value string, def int, name string) (int, *middleware.AppE
 
 func invalidSlugError() *middleware.AppError {
 	return middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "Invalid slug format")
+}
+
+// validateSort validates the sort parameter against the whitelist,
+// defaulting to newest when empty.
+func validateSort(value string) (SortOption, *middleware.AppError) {
+	sort := strings.TrimSpace(value)
+	if sort == "" {
+		return SortNewest, nil
+	}
+	switch SortOption(sort) {
+	case SortNewest, SortRating, SortMostRated:
+		return SortOption(sort), nil
+	default:
+		return "", middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "sort must be one of: newest, rating, most-rated")
+	}
+}
+
+// parseRating parses the rating filter, returning nil when empty.
+func parseRating(value string) (*float64, *middleware.AppError) {
+	v := strings.TrimSpace(value)
+	if v == "" {
+		return nil, nil
+	}
+	r, err := strconv.ParseFloat(v, 64)
+	if err != nil || r < minRatingValue || r > maxRatingValue {
+		return nil, middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "rating must be a number between 1 and 5")
+	}
+	return &r, nil
 }
 
 func bookNotFound() *middleware.AppError {

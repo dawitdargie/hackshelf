@@ -447,7 +447,7 @@ These adjustments change only the implementation approach, not the project scope
 - `backend/internal/books/book_repository.go`
 - `backend/internal/books/book_service.go`
 - `backend/internal/books/book_handler.go`
-- `backend/migrations/016_add_search_indexes.sql` (new)
+- `backend/migrations/017_add_search_indexes.sql` (new)
 
 #### Acceptance Criteria
 - [ ] `GET /books?search=burp` returns relevant Burp Suite books

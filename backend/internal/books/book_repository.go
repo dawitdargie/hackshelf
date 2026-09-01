@@ -3,8 +3,10 @@ package books
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,20 +30,99 @@ const ratingSummarySelect = `
 		WHERE r.book_id = b.id
 	) rat ON true`
 
-// List returns one page of book summaries plus the total book count.
-func (r *BookRepository) List(ctx context.Context, page, limit int) ([]BookSummary, int, error) {
-	offset := (page - 1) * limit
+// SortOption is a whitelisted sort ordering. Order-by SQL lives here, never
+// in user input.
+type SortOption string
 
-	rows, err := r.pool.Query(ctx, `
-		SELECT b.id, b.title, b.slug, COALESCE(b.cover_url, ''),
-		       l.id, l.name, l.slug,
+const (
+	SortNewest    SortOption = "newest"
+	SortRating    SortOption = "rating"
+	SortMostRated SortOption = "most-rated"
+)
+
+// sortClauses maps sort options to ORDER BY SQL. Ties broken by created_at
+// for stable pagination.
+var sortClauses = map[SortOption]string{
+	SortNewest:    "b.created_at DESC",
+	SortRating:    "rat.avg_rating DESC, rat.rating_count DESC, b.created_at DESC",
+	SortMostRated: "rat.rating_count DESC, rat.avg_rating DESC, b.created_at DESC",
+}
+
+// newestClause sorts by publication date when present, falling back to created_at.
+const newestClause = "COALESCE(b.publication_date, b.created_at::date) DESC, b.created_at DESC"
+
+// BookQuery carries the parsed filter/sort/pagination parameters for List.
+type BookQuery struct {
+	Search       string
+	LevelSlug    string
+	CategorySlug string
+	TopicSlug    string
+	MinRating    *float64
+	Sort         SortOption
+	Page         int
+	Limit        int
+}
+
+// List returns one filtered/sorted page of book summaries plus the total
+// matching count. All values are parameterized; only whitelisted SQL ever
+// reaches the query text.
+func (r *BookRepository) List(ctx context.Context, q BookQuery) ([]BookSummary, int, error) {
+	offset := (q.Page - 1) * q.Limit
+
+	// WHERE builder: collects clauses and args in order.
+	where := []string{"true"}
+	var args []interface{}
+	arg := func(v interface{}) string {
+		args = append(args, v)
+		return fmt.Sprintf("$%d", len(args))
+	}
+
+	if s := strings.TrimSpace(q.Search); s != "" {
+		ph := arg(s)
+		// Match title/description via full-text + ILIKE, and author names
+		// via EXISTS (uses idx_book_authors_author_id / PK index).
+		where = append(where, fmt.Sprintf(
+			"(b.search_vec @@ plainto_tsquery('english', %s) OR b.title ILIKE '%%'||%s||'%%' OR b.description ILIKE '%%'||%s||'%%' OR EXISTS (SELECT 1 FROM book_authors ba JOIN authors a ON a.id = ba.author_id WHERE ba.book_id = b.id AND a.name ILIKE '%%'||%s||'%%'))",
+			ph, ph, ph, ph))
+	}
+	if q.LevelSlug != "" {
+		where = append(where, "l.slug = "+arg(q.LevelSlug))
+	}
+	if q.CategorySlug != "" {
+		where = append(where, "EXISTS (SELECT 1 FROM book_categories bc JOIN categories c ON c.id = bc.category_id WHERE bc.book_id = b.id AND c.slug = "+arg(q.CategorySlug)+")")
+	}
+	if q.TopicSlug != "" {
+		where = append(where, "EXISTS (SELECT 1 FROM book_topics bt JOIN topics t ON t.id = bt.topic_id WHERE bt.book_id = b.id AND t.slug = "+arg(q.TopicSlug)+")")
+	}
+	if q.MinRating != nil {
+		where = append(where, "rat.avg_rating >= "+arg(*q.MinRating))
+	}
+	whereSQL := strings.Join(where, " AND ")
+
+	orderBy, ok := sortClauses[q.Sort]
+	if !ok {
+		return nil, 0, fmt.Errorf("unsupported sort option: %s", q.Sort)
+	}
+	if q.Sort == SortNewest {
+		orderBy = newestClause
+	}
+
+	// The window count is computed before LIMIT, so it reflects the full
+	// filtered set while the WHERE text appears only once.
+	query := fmt.Sprintf(`
+		SELECT b.id, b.title, b.slug, COALESCE(b.cover_url, '') AS cover_url,
+		       l.id AS level_id, l.name AS level_name, l.slug AS level_slug,
 		       rat.avg_rating, rat.rating_count,
-		       (SELECT COUNT(*) FROM books) AS total
+		       COUNT(*) OVER () AS total
 		FROM books b
 		JOIN levels l ON l.id = b.level_id
-		`+ratingSummarySelect+`
-		ORDER BY b.created_at DESC
-		LIMIT $1 OFFSET $2`, limit, offset)
+		%s
+		WHERE %s
+		ORDER BY %s
+		LIMIT %d OFFSET %d`,
+		ratingSummarySelect, whereSQL, orderBy, q.Limit, offset)
+
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list books: %w", err)
 	}
@@ -55,7 +136,7 @@ func (r *BookRepository) List(ctx context.Context, page, limit int) ([]BookSumma
 			&s.ID, &s.Title, &s.Slug, &s.CoverURL,
 			&s.Level.ID, &s.Level.Name, &s.Level.Slug,
 			&s.Rating.Average, &s.Rating.Count,
-			&total,
+			&total, // COUNT(*) OVER () — full filtered count
 		); err != nil {
 			return nil, 0, fmt.Errorf("failed to scan book summary: %w", err)
 		}
@@ -65,6 +146,33 @@ func (r *BookRepository) List(ctx context.Context, page, limit int) ([]BookSumma
 		return nil, 0, fmt.Errorf("failed to iterate book summaries: %w", err)
 	}
 	return summaries, total, nil
+}
+
+// LevelSlugExists reports whether a level slug exists.
+func (r *BookRepository) LevelSlugExists(ctx context.Context, slug string) (bool, error) {
+	return r.slugExists(ctx, `SELECT 1 FROM levels WHERE slug = $1`, slug)
+}
+
+// CategorySlugExists reports whether a category slug exists.
+func (r *BookRepository) CategorySlugExists(ctx context.Context, slug string) (bool, error) {
+	return r.slugExists(ctx, `SELECT 1 FROM categories WHERE slug = $1`, slug)
+}
+
+// TopicSlugExists reports whether a topic slug exists.
+func (r *BookRepository) TopicSlugExists(ctx context.Context, slug string) (bool, error) {
+	return r.slugExists(ctx, `SELECT 1 FROM topics WHERE slug = $1`, slug)
+}
+
+func (r *BookRepository) slugExists(ctx context.Context, query, slug string) (bool, error) {
+	var one int
+	err := r.pool.QueryRow(ctx, query, slug).Scan(&one)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to check slug: %w", err)
+	}
+	return true, nil
 }
 
 // FindBySlug returns the core book row (book + level + rating) for a slug.

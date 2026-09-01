@@ -43,7 +43,17 @@ func writeAppError(w http.ResponseWriter, appErr *middleware.AppError) {
 // List handles GET /api/v1/books
 func (h *BookHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	summaries, meta, appErr := h.service.List(r.Context(), q.Get("page"), q.Get("limit"))
+	params := QueryParams{
+		Search:   q.Get("search"),
+		Level:    q.Get("level"),
+		Category: q.Get("category"),
+		Topic:    q.Get("topic"),
+		Rating:   q.Get("rating"),
+		Sort:     q.Get("sort"),
+		Page:     q.Get("page"),
+		Limit:    q.Get("limit"),
+	}
+	summaries, meta, appErr := h.service.List(r.Context(), params)
 	if appErr != nil {
 		writeAppError(w, appErr)
 		return

@@ -52,6 +52,49 @@ func TestNewPaginationMeta(t *testing.T) {
 	}
 }
 
+func TestValidateSort(t *testing.T) {
+	valid := map[string]SortOption{
+		"":           SortNewest, // default
+		"  ":         SortNewest, // whitespace → default
+		"newest":     SortNewest,
+		"rating":     SortRating,
+		"most-rated": SortMostRated,
+	}
+	for in, want := range valid {
+		got, appErr := validateSort(in)
+		if appErr != nil || got != want {
+			t.Errorf("validateSort(%q): want %q, got %q, err %v", in, want, got, appErr)
+		}
+	}
+	for _, in := range []string{"bogus", "rating;DROP TABLE books", "RATING", "most_rated"} {
+		_, appErr := validateSort(in)
+		if appErr == nil || appErr.Status != 422 {
+			t.Errorf("validateSort(%q): expected 422, got %v", in, appErr)
+		}
+	}
+}
+
+func TestParseRating(t *testing.T) {
+	// Empty → nil (no filter).
+	if r, appErr := parseRating(""); appErr != nil || r != nil {
+		t.Errorf("empty rating: want nil filter, got %v, %v", r, appErr)
+	}
+	// Valid range.
+	for _, in := range []string{"1", "3.5", "5", " 4 "} {
+		r, appErr := parseRating(in)
+		if appErr != nil || r == nil || *r < 1 || *r > 5 {
+			t.Errorf("parseRating(%q): expected valid, got %v, %v", in, r, appErr)
+		}
+	}
+	// Invalid.
+	for _, in := range []string{"0", "5.1", "9", "abc", "-1", "'; DROP TABLE books;--"} {
+		_, appErr := parseRating(in)
+		if appErr == nil || appErr.Status != 422 {
+			t.Errorf("parseRating(%q): expected 422, got %v", in, appErr)
+		}
+	}
+}
+
 func TestSlugRegex(t *testing.T) {
 	valid := []string{"example-book", "a", "owasp-testing-guide-v4", "123"}
 	invalid := []string{"", "-lead", "trail-", "has space", "UPPER", "double--hyphen", "under_score", "../../etc"}
