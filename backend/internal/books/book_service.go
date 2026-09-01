@@ -182,6 +182,40 @@ func (s *BookService) GetChapter(ctx context.Context, bookSlug, chapterSlug stri
 	return chapter, nil
 }
 
+// ListSummariesByLevel returns all book summaries for a level slug.
+func (s *BookService) ListSummariesByLevel(ctx context.Context, slug string) ([]BookSummary, *middleware.AppError) {
+	return s.summariesByTaxon(ctx, slug, s.repo.ListSummariesByLevel)
+}
+
+// ListSummariesByCategory returns all book summaries for a category slug.
+func (s *BookService) ListSummariesByCategory(ctx context.Context, slug string) ([]BookSummary, *middleware.AppError) {
+	return s.summariesByTaxon(ctx, slug, s.repo.ListSummariesByCategory)
+}
+
+// ListSummariesByTopic returns all book summaries for a topic slug.
+func (s *BookService) ListSummariesByTopic(ctx context.Context, slug string) ([]BookSummary, *middleware.AppError) {
+	return s.summariesByTaxon(ctx, slug, s.repo.ListSummariesByTopic)
+}
+
+// ListSummariesByAuthor returns all book summaries for an author slug.
+func (s *BookService) ListSummariesByAuthor(ctx context.Context, slug string) ([]BookSummary, *middleware.AppError) {
+	return s.summariesByTaxon(ctx, slug, s.repo.ListSummariesByAuthor)
+}
+
+func (s *BookService) summariesByTaxon(ctx context.Context, slug string, list func(context.Context, string) ([]BookSummary, error)) ([]BookSummary, *middleware.AppError) {
+	if !slugRegex.MatchString(slug) {
+		return nil, invalidSlugError()
+	}
+	summaries, err := list(ctx, slug)
+	if err != nil {
+		return nil, internalError()
+	}
+	if summaries == nil {
+		summaries = []BookSummary{}
+	}
+	return summaries, nil
+}
+
 // PaginationMeta is the "meta" block of list responses (API spec §10).
 type PaginationMeta struct {
 	Page       int `json:"page"`
@@ -191,6 +225,12 @@ type PaginationMeta struct {
 }
 
 func newPaginationMeta(page, limit, total int) PaginationMeta {
+	return NewPaginationMeta(page, limit, total)
+}
+
+// NewPaginationMeta computes the pagination meta block. Exported for reuse
+// by paginated taxonomy endpoints.
+func NewPaginationMeta(page, limit, total int) PaginationMeta {
 	totalPages := (total + limit - 1) / limit
 	if totalPages < 1 {
 		totalPages = 1

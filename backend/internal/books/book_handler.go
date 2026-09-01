@@ -17,10 +17,25 @@ func NewBookHandler(service *BookService) *BookHandler {
 	return &BookHandler{service: service}
 }
 
-// dataResponse wraps the response data in a "data" field per API spec.
-type dataResponse struct {
+// WriteJSON writes a successful JSON response.
+func WriteJSON(w http.ResponseWriter, status int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(payload)
+}
+
+// WriteAppError writes a structured error from a service AppError.
+func WriteAppError(w http.ResponseWriter, appErr *middleware.AppError) {
+	middleware.WriteError(w, appErr.Status, appErr.Code, appErr.Message)
+}
+
+// DataResponse wraps the response data in a "data" field per API spec.
+type DataResponse struct {
 	Data interface{} `json:"data"`
 }
+
+// dataResponse wraps the response data in a "data" field per API spec.
+type dataResponse = DataResponse
 
 // listResponse is the paginated list envelope (API spec §10).
 type listResponse struct {
@@ -30,14 +45,12 @@ type listResponse struct {
 
 // writeJSON writes a successful JSON response.
 func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(payload)
+	WriteJSON(w, status, payload)
 }
 
 // writeAppError writes a structured error from a service AppError.
 func writeAppError(w http.ResponseWriter, appErr *middleware.AppError) {
-	middleware.WriteError(w, appErr.Status, appErr.Code, appErr.Message)
+	WriteAppError(w, appErr)
 }
 
 // List handles GET /api/v1/books

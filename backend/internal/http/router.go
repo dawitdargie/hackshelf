@@ -5,24 +5,32 @@ import (
 	"time"
 
 	"hackshelf/backend/internal/auth"
+	"hackshelf/backend/internal/authors"
 	"hackshelf/backend/internal/books"
+	"hackshelf/backend/internal/categories"
 	"hackshelf/backend/internal/config"
 	"hackshelf/backend/internal/database"
 	"hackshelf/backend/internal/email"
 	"hackshelf/backend/internal/http/middleware"
+	"hackshelf/backend/internal/levels"
+	"hackshelf/backend/internal/topics"
 	"hackshelf/backend/internal/users"
 )
 
 // Router holds the application's HTTP routes and dependencies.
 type Router struct {
-	mux            *http.ServeMux
-	db             *database.DB
-	cfg            *config.Config
-	authHandler    *auth.AuthHandler
-	tokenHandler   *auth.TokenHandler
-	bookHandler    *books.BookHandler
-	authMiddleware func(http.Handler) http.Handler
-	handler        http.Handler
+	mux             *http.ServeMux
+	db              *database.DB
+	cfg             *config.Config
+	authHandler     *auth.AuthHandler
+	tokenHandler    *auth.TokenHandler
+	bookHandler     *books.BookHandler
+	levelHandler    *levels.LevelHandler
+	categoryHandler *categories.CategoryHandler
+	topicHandler    *topics.TopicHandler
+	authorHandler   *authors.AuthorHandler
+	authMiddleware  func(http.Handler) http.Handler
+	handler         http.Handler
 }
 
 // NewRouter creates a new router with all routes registered and middleware applied.
@@ -57,16 +65,27 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 	// Build book dependencies (Phase 7)
 	bookRepo := books.NewBookRepository(db.Pool)
 	chapterRepo := books.NewChapterRepository(db.Pool)
-	bookHandler := books.NewBookHandler(books.NewBookService(bookRepo, chapterRepo))
+	bookService := books.NewBookService(bookRepo, chapterRepo)
+	bookHandler := books.NewBookHandler(bookService)
+
+	// Build taxonomy dependencies (Phase 9)
+	levelHandler := levels.NewLevelHandler(levels.NewLevelService(levels.NewLevelRepository(db.Pool), bookService))
+	categoryHandler := categories.NewCategoryHandler(categories.NewCategoryService(categories.NewCategoryRepository(db.Pool), bookService))
+	topicHandler := topics.NewTopicHandler(topics.NewTopicService(topics.NewTopicRepository(db.Pool), bookService))
+	authorHandler := authors.NewAuthorHandler(authors.NewAuthorService(authors.NewAuthorRepository(db.Pool), bookService))
 
 	r := &Router{
-		mux:            http.NewServeMux(),
-		db:             db,
-		cfg:            cfg,
-		authHandler:    authHandler,
-		tokenHandler:   tokenHandler,
-		bookHandler:    bookHandler,
-		authMiddleware: authMiddleware,
+		mux:             http.NewServeMux(),
+		db:              db,
+		cfg:             cfg,
+		authHandler:     authHandler,
+		tokenHandler:    tokenHandler,
+		bookHandler:     bookHandler,
+		levelHandler:    levelHandler,
+		categoryHandler: categoryHandler,
+		topicHandler:    topicHandler,
+		authorHandler:   authorHandler,
+		authMiddleware:  authMiddleware,
 	}
 	r.registerRoutes()
 
@@ -102,6 +121,16 @@ func (r *Router) registerRoutes() {
 	r.mux.HandleFunc("GET /api/v1/books/{slug}", r.bookHandler.GetBySlug)
 	r.mux.HandleFunc("GET /api/v1/books/{slug}/chapters", r.bookHandler.ListChapters)
 	r.mux.HandleFunc("GET /api/v1/books/{slug}/chapters/{chapterSlug}", r.bookHandler.GetChapter)
+
+	// Public taxonomy routes (Phase 9)
+	r.mux.HandleFunc("GET /api/v1/levels", r.levelHandler.List)
+	r.mux.HandleFunc("GET /api/v1/levels/{slug}", r.levelHandler.GetBySlug)
+	r.mux.HandleFunc("GET /api/v1/categories", r.categoryHandler.List)
+	r.mux.HandleFunc("GET /api/v1/categories/{slug}", r.categoryHandler.GetBySlug)
+	r.mux.HandleFunc("GET /api/v1/topics", r.topicHandler.List)
+	r.mux.HandleFunc("GET /api/v1/topics/{slug}", r.topicHandler.GetBySlug)
+	r.mux.HandleFunc("GET /api/v1/authors", r.authorHandler.List)
+	r.mux.HandleFunc("GET /api/v1/authors/{slug}", r.authorHandler.GetBySlug)
 }
 
 // handleHealth returns the health status of the API.
