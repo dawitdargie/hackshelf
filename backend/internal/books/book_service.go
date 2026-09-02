@@ -42,6 +42,23 @@ type QueryParams struct {
 	Limit    string
 }
 
+// ValidateBookID checks that bookID is a well-formed UUID and refers to an
+// existing book. Returns 422 for malformed IDs and 404 for unknown books.
+// Shared with the ratings/reviews packages which key routes on book IDs.
+func (s *BookService) ValidateBookID(ctx context.Context, bookID string) *middleware.AppError {
+	if !UUIDRegex.MatchString(bookID) {
+		return middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "invalid book id")
+	}
+	exists, err := s.repo.ExistsByID(ctx, bookID)
+	if err != nil {
+		return middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "Something went wrong")
+	}
+	if !exists {
+		return middleware.NewAppError(http.StatusNotFound, "BOOK_NOT_FOUND", "Book not found")
+	}
+	return nil
+}
+
 // minRatingValue/maxRatingValue bound the rating filter (API spec §12).
 const (
 	minRatingValue = 1.0

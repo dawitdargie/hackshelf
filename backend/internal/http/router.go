@@ -13,6 +13,8 @@ import (
 	"hackshelf/backend/internal/email"
 	"hackshelf/backend/internal/http/middleware"
 	"hackshelf/backend/internal/levels"
+	"hackshelf/backend/internal/ratings"
+	"hackshelf/backend/internal/reviews"
 	"hackshelf/backend/internal/topics"
 	"hackshelf/backend/internal/users"
 )
@@ -29,6 +31,8 @@ type Router struct {
 	categoryHandler *categories.CategoryHandler
 	topicHandler    *topics.TopicHandler
 	authorHandler   *authors.AuthorHandler
+	ratingHandler   *ratings.RatingHandler
+	reviewHandler   *reviews.ReviewHandler
 	authMiddleware  func(http.Handler) http.Handler
 	handler         http.Handler
 }
@@ -74,6 +78,10 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 	topicHandler := topics.NewTopicHandler(topics.NewTopicService(topics.NewTopicRepository(db.Pool), bookService))
 	authorHandler := authors.NewAuthorHandler(authors.NewAuthorService(authors.NewAuthorRepository(db.Pool), bookService))
 
+	// Build rating and review dependencies (Phase 10)
+	ratingHandler := ratings.NewRatingHandler(ratings.NewRatingRepository(db.Pool), bookService)
+	reviewHandler := reviews.NewReviewHandler(reviews.NewReviewRepository(db.Pool), bookService)
+
 	r := &Router{
 		mux:             http.NewServeMux(),
 		db:              db,
@@ -85,6 +93,8 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 		categoryHandler: categoryHandler,
 		topicHandler:    topicHandler,
 		authorHandler:   authorHandler,
+		ratingHandler:   ratingHandler,
+		reviewHandler:   reviewHandler,
 		authMiddleware:  authMiddleware,
 	}
 	r.registerRoutes()
@@ -131,6 +141,16 @@ func (r *Router) registerRoutes() {
 	r.mux.HandleFunc("GET /api/v1/topics/{slug}", r.topicHandler.GetBySlug)
 	r.mux.HandleFunc("GET /api/v1/authors", r.authorHandler.List)
 	r.mux.HandleFunc("GET /api/v1/authors/{slug}", r.authorHandler.GetBySlug)
+
+	// Public review listing (Phase 10)
+	r.mux.HandleFunc("GET /api/v1/books/{bookId}/reviews", r.reviewHandler.List)
+
+	// Authenticated rating and review routes (Phase 10)
+	r.mux.Handle("PUT /api/v1/books/{bookId}/rating", r.authMiddleware(http.HandlerFunc(r.ratingHandler.Upsert)))
+	r.mux.Handle("DELETE /api/v1/books/{bookId}/rating", r.authMiddleware(http.HandlerFunc(r.ratingHandler.Delete)))
+	r.mux.Handle("POST /api/v1/books/{bookId}/reviews", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Create)))
+	r.mux.Handle("PUT /api/v1/reviews/{reviewId}", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Update)))
+	r.mux.Handle("DELETE /api/v1/reviews/{reviewId}", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Delete)))
 }
 
 // handleHealth returns the health status of the API.

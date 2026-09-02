@@ -148,6 +148,19 @@ func (r *BookRepository) List(ctx context.Context, q BookQuery) ([]BookSummary, 
 	return summaries, total, nil
 }
 
+// ExistsByID reports whether a book with the given ID exists.
+func (r *BookRepository) ExistsByID(ctx context.Context, id string) (bool, error) {
+	var one int
+	err := r.pool.QueryRow(ctx, `SELECT 1 FROM books WHERE id = $1`, id).Scan(&one)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to check book existence: %w", err)
+	}
+	return true, nil
+}
+
 // LevelSlugExists reports whether a level slug exists.
 func (r *BookRepository) LevelSlugExists(ctx context.Context, slug string) (bool, error) {
 	return r.slugExists(ctx, `SELECT 1 FROM levels WHERE slug = $1`, slug)
