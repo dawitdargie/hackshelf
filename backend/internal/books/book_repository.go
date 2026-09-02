@@ -20,9 +20,9 @@ func NewBookRepository(pool *pgxpool.Pool) *BookRepository {
 	return &BookRepository{pool: pool}
 }
 
-// ratingSummarySelect is the aggregate rating subquery joined via LATERAL so
+// RatingSummarySelect is the aggregate rating subquery joined via LATERAL so
 // the list query stays a single round trip (uses idx_ratings_book_id).
-const ratingSummarySelect = `
+const RatingSummarySelect = `
 	LEFT JOIN LATERAL (
 		SELECT COALESCE(AVG(r.rating), 0)::float AS avg_rating,
 		       COUNT(r.id)::int AS rating_count
@@ -120,7 +120,7 @@ func (r *BookRepository) List(ctx context.Context, q BookQuery) ([]BookSummary, 
 		WHERE %s
 		ORDER BY %s
 		LIMIT %d OFFSET %d`,
-		ratingSummarySelect, whereSQL, orderBy, q.Limit, offset)
+		RatingSummarySelect, whereSQL, orderBy, q.Limit, offset)
 
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -202,7 +202,7 @@ func (r *BookRepository) FindBySlug(ctx context.Context, slug string) (*Book, er
 		       rat.avg_rating, rat.rating_count
 		FROM books b
 		JOIN levels l ON l.id = b.level_id
-		`+ratingSummarySelect+`
+		`+RatingSummarySelect+`
 		WHERE b.slug = $1`, slug,
 	).Scan(
 		&b.ID, &b.Title, &b.Slug, &b.Description, &coverURL,

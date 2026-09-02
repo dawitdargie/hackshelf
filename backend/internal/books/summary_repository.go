@@ -16,7 +16,7 @@ func (r *BookRepository) listSummariesByTaxon(ctx context.Context, existsClause,
 		JOIN levels l ON l.id = b.level_id
 		%s
 		WHERE %s
-		ORDER BY %s`, ratingSummarySelect, existsClause, newestClause)
+		ORDER BY %s`, RatingSummarySelect, existsClause, newestClause)
 
 	rows, err := r.pool.Query(ctx, query, slug)
 	if err != nil {
