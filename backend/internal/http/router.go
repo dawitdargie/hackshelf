@@ -6,6 +6,7 @@ import (
 
 	"hackshelf/backend/internal/auth"
 	"hackshelf/backend/internal/authors"
+	"hackshelf/backend/internal/bookmarks"
 	"hackshelf/backend/internal/books"
 	"hackshelf/backend/internal/categories"
 	"hackshelf/backend/internal/config"
@@ -13,6 +14,8 @@ import (
 	"hackshelf/backend/internal/email"
 	"hackshelf/backend/internal/http/middleware"
 	"hackshelf/backend/internal/levels"
+	"hackshelf/backend/internal/library"
+	"hackshelf/backend/internal/progress"
 	"hackshelf/backend/internal/ratings"
 	"hackshelf/backend/internal/reviews"
 	"hackshelf/backend/internal/topics"
@@ -33,6 +36,9 @@ type Router struct {
 	authorHandler   *authors.AuthorHandler
 	ratingHandler   *ratings.RatingHandler
 	reviewHandler   *reviews.ReviewHandler
+	libraryHandler  *library.Handler
+	bookmarkHandler *bookmarks.Handler
+	progressHandler *progress.Handler
 	authMiddleware  func(http.Handler) http.Handler
 	handler         http.Handler
 }
@@ -82,6 +88,11 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 	ratingHandler := ratings.NewRatingHandler(ratings.NewRatingRepository(db.Pool), bookService)
 	reviewHandler := reviews.NewReviewHandler(reviews.NewReviewRepository(db.Pool), bookService)
 
+	// Build library, bookmark, and progress dependencies (Phase 11)
+	libraryHandler := library.NewHandler(library.NewLibraryRepository(db.Pool, bookService), bookService)
+	bookmarkHandler := bookmarks.NewHandler(bookmarks.NewRepository(db.Pool), bookService)
+	progressHandler := progress.NewHandler(progress.NewRepository(db.Pool), bookService)
+
 	r := &Router{
 		mux:             http.NewServeMux(),
 		db:              db,
@@ -95,6 +106,9 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 		authorHandler:   authorHandler,
 		ratingHandler:   ratingHandler,
 		reviewHandler:   reviewHandler,
+		libraryHandler:  libraryHandler,
+		bookmarkHandler: bookmarkHandler,
+		progressHandler: progressHandler,
 		authMiddleware:  authMiddleware,
 	}
 	r.registerRoutes()
@@ -151,6 +165,22 @@ func (r *Router) registerRoutes() {
 	r.mux.Handle("POST /api/v1/books/{bookId}/reviews", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Create)))
 	r.mux.Handle("PUT /api/v1/reviews/{reviewId}", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Update)))
 	r.mux.Handle("DELETE /api/v1/reviews/{reviewId}", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Delete)))
+
+	// Library: saved books (Phase 11)
+	r.mux.Handle("GET /api/v1/me/library", r.authMiddleware(http.HandlerFunc(r.libraryHandler.Get)))
+	r.mux.Handle("POST /api/v1/me/library/{bookId}", r.authMiddleware(http.HandlerFunc(r.libraryHandler.Save)))
+	r.mux.Handle("DELETE /api/v1/me/library/{bookId}", r.authMiddleware(http.HandlerFunc(r.libraryHandler.Remove)))
+
+	// Bookmarks (Phase 11)
+	r.mux.Handle("GET /api/v1/me/bookmarks", r.authMiddleware(http.HandlerFunc(r.bookmarkHandler.ListAll)))
+	r.mux.Handle("GET /api/v1/me/books/{bookId}/bookmarks", r.authMiddleware(http.HandlerFunc(r.bookmarkHandler.ListForBook)))
+	r.mux.Handle("POST /api/v1/me/books/{bookId}/bookmarks", r.authMiddleware(http.HandlerFunc(r.bookmarkHandler.Create)))
+	r.mux.Handle("DELETE /api/v1/me/bookmarks/{bookmarkId}", r.authMiddleware(http.HandlerFunc(r.bookmarkHandler.Delete)))
+
+	// Reading progress (Phase 11)
+	r.mux.Handle("GET /api/v1/me/books/{bookId}/progress", r.authMiddleware(http.HandlerFunc(r.progressHandler.Get)))
+	r.mux.Handle("PUT /api/v1/me/books/{bookId}/progress", r.authMiddleware(http.HandlerFunc(r.progressHandler.Upsert)))
+	r.mux.Handle("DELETE /api/v1/me/books/{bookId}/progress", r.authMiddleware(http.HandlerFunc(r.progressHandler.Delete)))
 }
 
 // handleHealth returns the health status of the API.
