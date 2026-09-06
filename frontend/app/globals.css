@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    @apply bg-base text-ink antialiased;
+  }
+  body {
+    @apply font-body;
+    background-image:
+      linear-gradient(rgba(61, 220, 132, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(61, 220, 132, 0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  ::selection {
+    @apply bg-primary/30 text-ink;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-base;
+  }
+}
+
+@layer components {
+  /* Scanline overlay — apply to hero panels only (GPU-cheap, pure CSS). */
+  .scanlines {
+    position: relative;
+    overflow: hidden;
+  }
+  .scanlines::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  /* Terminal window chrome */
+  .terminal-panel {
+    @apply rounded-lg border border-line bg-surface;
+  }
+  .terminal-dots::before {
+    content: "● ● ●";
+    @apply absolute left-4 top-3 text-[10px] tracking-[3px] text-muted/60;
+  }
+
+  /* Mono metadata line, e.g. "> level: beginner" */
+  .meta-line {
+    @apply font-mono text-xs text-muted;
+  }
+  .meta-line strong {
+    @apply text-primary font-medium;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
