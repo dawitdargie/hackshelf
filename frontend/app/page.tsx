@@ -1,57 +1,101 @@
-import { BookCard } from "@/components/ui/BookCard";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
-import { Pagination } from "@/components/ui/Pagination";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { SearchBar } from "@/components/home/SearchBar";
+import { BooksSection } from "@/components/home/BooksSection";
+import { LevelsSection } from "@/components/home/LevelsSection";
+import { CategoriesSection } from "@/components/home/CategoriesSection";
+import { CTABand } from "@/components/home/CTABand";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { Hero } from "@/components/layout/Hero";
-import { SAMPLE_BOOKS } from "@/lib/sample-data";
 
-export default function ShowcasePage() {
+// HackShelf — homepage (Phase 14). Server-rendered for SEO: every section
+// fetches the real catalog via the Phase 13 fetch functions and streams in
+// through Suspense, with graceful loading/empty states.
+
+// Always render on the server at request time (public catalog pages are SSR).
+export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: "HackShelf — Free Hacking Books, Read in Browser",
+  description:
+    "A curated collection of 100% free, legally hosted hacking and cybersecurity books. Search the catalog, browse by level and category, and read in your browser — no paywalls, no PDF hunting.",
+  openGraph: {
+    title: "HackShelf — Free Hacking Books, Read in Browser",
+    description:
+      "A curated collection of 100% free, legally hosted hacking and cybersecurity books. Read in your browser, track your progress.",
+    type: "website",
+    siteName: "HackShelf",
+  },
+};
+
+function SectionFallback() {
   return (
-    <div>
-      <Hero />
+    <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-10">
+      <LoadingState rows={2} />
+    </div>
+  );
+}
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <h2 className="meta-line mb-6">// component showcase — phase 12 demo</h2>
-
-        <h3 className="font-display text-lg font-semibold">Book grid</h3>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {SAMPLE_BOOKS.map((book) => (
-            <BookCard key={book.id} book={book} />
-          ))}
-        </div>
-
-        <h3 className="mt-12 font-display text-lg font-semibold">Controls & states</h3>
-        <div className="mt-4 flex flex-wrap items-start gap-6">
-          <div className="space-y-3">
-            <Button>$ primary_action</Button>
-            <Button variant="terminal">$ terminal_action</Button>
-            <Button variant="ghost">ghost_action</Button>
-            <Button variant="danger">$ rm -rf session</Button>
+export default function HomePage() {
+  return (
+    <>
+      {/* Hero — warm band, Syne headline, search into the catalog */}
+      <section className="border-b border-line bg-warm">
+        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-10 md:py-24">
+          <p className="section-label mb-4">Free &amp; legal · Read in browser</p>
+          <h1 className="max-w-3xl font-display text-4xl font-extrabold leading-[1.1] tracking-[-0.02em] text-ink md:text-6xl">
+            The hacker&apos;s bookshelf.
+            <br />
+            <span className="text-accent">100% free.</span> Read in your browser.
+          </h1>
+          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-ink-3">
+            A curated collection of legally hosted hacking and cybersecurity
+            books — from first recon to advanced exploitation. No paywalls, no
+            PDFs to hunt down. Just read.
+          </p>
+          <div className="mt-8">
+            <SearchBar />
           </div>
-          <div className="w-64">
-            <Input label="search" name="q" placeholder="grep the catalog..." />
-            <div className="mt-3">
-              <Input label="email" name="email" error="invalid format" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Badge tone="primary">beginner</Badge>
-            <Badge tone="accent">web-security</Badge>
-            <Badge>open-source</Badge>
-          </div>
-        </div>
-
-        <div className="mt-8 max-w-md space-y-4">
-          <Pagination page={2} totalPages={7} baseHref="/books" />
-          <EmptyState message="no books match 'metasploit paid edition'" hint="try a different query" />
-          <LoadingState rows={2} />
-          <ErrorState />
         </div>
       </section>
-    </div>
+
+      {/* Popular / highly rated */}
+      <Suspense fallback={<SectionFallback />}>
+        <BooksSection
+          label="Community favorites"
+          title="Highest"
+          highlight="rated"
+          filters={{ sort: "rating", limit: 8 }}
+          linkText="All top rated"
+        />
+      </Suspense>
+
+      {/* Recently added */}
+      <div className="bg-warm/60">
+        <Suspense fallback={<SectionFallback />}>
+          <BooksSection
+            label="Fresh off the shelf"
+            title="Recently"
+            highlight="added"
+            filters={{ sort: "newest", limit: 8 }}
+            href="/books?sort=newest"
+            linkText="See what's new"
+          />
+        </Suspense>
+      </div>
+
+      {/* Levels */}
+      <Suspense fallback={<SectionFallback />}>
+        <LevelsSection />
+      </Suspense>
+
+      {/* Categories */}
+      <div className="bg-warm/60">
+        <Suspense fallback={<SectionFallback />}>
+          <CategoriesSection />
+        </Suspense>
+      </div>
+
+      <CTABand />
+    </>
   );
 }
