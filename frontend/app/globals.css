@@ -3,63 +3,42 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 @layer base {
   html {
-    @apply bg-base text-ink antialiased;
+    @apply bg-bg text-ink antialiased;
+    scroll-behavior: smooth;
   }
   body {
-    @apply font-body;
-    background-image:
-      linear-gradient(rgba(61, 220, 132, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(61, 220, 132, 0.025) 1px, transparent 1px);
-    background-size: 32px 32px;
+    @apply font-body text-[15px] leading-[1.65] tracking-[-0.01em];
   }
   ::selection {
-    @apply bg-primary/30 text-ink;
+    @apply bg-ink text-lime;
   }
   *:focus-visible {
-    @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-base;
+    @apply outline-none ring-2 ring-accent/60 ring-offset-2 ring-offset-bg;
   }
 }
 
 @layer components {
-  /* Scanline overlay — apply to hero panels only (GPU-cheap, pure CSS). */
-  .scanlines {
-    position: relative;
-    overflow: hidden;
-  }
-  .scanlines::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.02) 0px,
-      rgba(255, 255, 255, 0.02) 1px,
-      transparent 1px,
-      transparent 3px
-    );
+  /* Paper card — default surface, hairline border, soft shadow */
+  .paper-card {
+    @apply rounded-lg border border-line bg-paper shadow-sm;
   }
 
-  /* Terminal window chrome */
-  .terminal-panel {
-    @apply rounded-lg border border-line bg-surface;
-  }
-  .terminal-dots::before {
-    content: "● ● ●";
-    @apply absolute left-4 top-3 text-[10px] tracking-[3px] text-muted/60;
+  /* Editorial section heading block */
+  .section-label {
+    @apply font-mono text-xs font-semibold uppercase tracking-[0.14em] text-accent;
   }
 
-  /* Mono metadata line, e.g. "> level: beginner" */
+  /* Mono metadata line, e.g. "412 books" */
   .meta-line {
     @apply font-mono text-xs text-muted;
   }
   .meta-line strong {
-    @apply text-primary font-medium;
+    @apply font-medium text-ink;
   }
 }
 

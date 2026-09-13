@@ -12,25 +12,25 @@ export function Pagination({
   return (
     <nav
       aria-label="Pagination"
-      className="flex items-center justify-center gap-2 font-mono text-sm"
+      className="flex items-center justify-center gap-2 text-sm"
     >
       <a
         href={`${baseHref}${sep}page=${Math.max(1, page - 1)}`}
         aria-disabled={page === 1}
-        className={`rounded border border-line px-3 py-1.5 ${
-          page === 1 ? "pointer-events-none opacity-40" : "hover:border-primary/40 hover:text-primary"
+        className={`paper-card px-3 py-1.5 font-medium text-ink-3 ${
+          page === 1 ? "pointer-events-none opacity-40" : "hover:border-ink hover:text-ink"
         }`}
       >
         &lt; prev
       </a>
       <span className="meta-line px-2">
-        page <strong className="text-primary">{page}</strong> / {totalPages}
+        page <strong>{page}</strong> / {totalPages}
       </span>
       <a
         href={`${baseHref}${sep}page=${Math.min(totalPages, page + 1)}`}
         aria-disabled={page === totalPages}
-        className={`rounded border border-line px-3 py-1.5 ${
-          page === totalPages ? "pointer-events-none opacity-40" : "hover:border-primary/40 hover:text-primary"
+        className={`paper-card px-3 py-1.5 font-medium text-ink-3 ${
+          page === totalPages ? "pointer-events-none opacity-40" : "hover:border-ink hover:text-ink"
         }`}
       >
         next &gt;

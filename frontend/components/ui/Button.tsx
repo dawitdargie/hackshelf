@@ -1,16 +1,15 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "ghost" | "terminal" | "danger";
+type Variant = "primary" | "ghost" | "lime" | "danger";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-primary text-base font-semibold hover:bg-primary-dim hover:shadow-glow-sm",
+    "bg-accent text-white font-semibold hover:bg-accent-dark shadow-sm hover:shadow-md",
   ghost:
-    "border border-line text-muted hover:border-primary/40 hover:text-primary",
-  terminal:
-    "border border-primary/40 bg-primary/10 font-mono text-primary hover:bg-primary/20 hover:shadow-glow-sm",
+    "border border-line-2 bg-paper text-ink-3 font-medium hover:border-ink hover:text-ink",
+  lime: "bg-ink text-lime font-semibold hover:bg-ink-2 shadow-sm hover:shadow-md",
   danger:
-    "border border-danger/40 bg-danger/10 font-mono text-danger hover:bg-danger/20",
+    "border border-rose/30 bg-rose-soft text-rose font-medium hover:bg-rose/10",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,7 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", className = "", ...props }, ref) => (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center rounded px-4 py-2 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   ),

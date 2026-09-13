@@ -4,38 +4,53 @@ const config: Config = {
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
+    "./hooks/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        base: "#0a0e14",        // page background — deep space black
-        surface: "#111621",     // card surface
-        raised: "#161d2b",      // hover/raised surface
-        line: "#1f2937",        // hairline borders
-        primary: "#3ddc84",     // matrix green
-        "primary-dim": "#2aa865",
-        accent: "#22d3ee",      // cyan
-        warn: "#fbbf24",
-        danger: "#f87171",
-        ink: "#e6edf3",         // main text
-        muted: "#8b949e",       // secondary text
+        bg: "#f8f7f4", // page background — warm paper
+        paper: "#ffffff", // card surface
+        ink: "#0c0c0c", // main text
+        "ink-2": "#1f1f1f",
+        "ink-3": "#4a4a4a",
+        muted: "#7a7a7a",
+        line: "#e8e6e1", // hairline borders
+        "line-2": "#d4d2cc",
+        accent: "#00a651", // green accent
+        "accent-dark": "#007a3a",
+        "accent-soft": "#e6f6ed",
+        lime: "#c8f26a",
+        warm: "#f3f1ec",
+        // category/level accents
+        teal: "#0d9488",
+        "teal-soft": "#ccfbf1",
+        forest: "#047857",
+        "forest-soft": "#d1fae5",
+        violet: "#7c3aed",
+        "violet-soft": "#f5f3ff",
+        amber: "#f59e0b",
+        "amber-soft": "#fffbeb",
+        rose: "#e11d48",
+        "rose-soft": "#ffe4e6",
+        danger: "#dc2626",
       },
       fontFamily: {
-        display: ["ui-sans-serif", "system-ui", "Segoe UI", "Helvetica Neue", "sans-serif"],
-        body: ["ui-sans-serif", "system-ui", "Segoe UI", "sans-serif"],
-        mono: ["ui-monospace", "Cascadia Code", "Consolas", "JetBrains Mono", "monospace"],
+        display: ["var(--font-display)", "Syne", "sans-serif"],
+        body: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "JetBrains Mono", "ui-monospace", "monospace"],
       },
       boxShadow: {
-        glow: "0 0 24px rgba(61, 220, 132, 0.15)",
-        "glow-sm": "0 0 12px rgba(61, 220, 132, 0.25)",
-        card: "0 4px 20px rgba(0,0,0,0.4)",
+        sm: "0 1px 2px rgba(12,12,12,0.04)",
+        md: "0 10px 30px -12px rgba(12,12,12,0.12)",
+        lg: "0 28px 56px -20px rgba(12,12,12,0.16)",
+      },
+      borderRadius: {
+        xl2: "18px",
       },
       keyframes: {
-        blink: { "0%, 49%": { opacity: "1" }, "50%, 100%": { opacity: "0" } },
         shimmer: { "100%": { transform: "translateX(100%)" } },
-      },
-      animation: {
-        blink: "blink 1.1s step-end infinite",
       },
     },
   },

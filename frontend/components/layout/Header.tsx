@@ -9,11 +9,17 @@ const NAV = [
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-base/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
-        <Link href="/" className="font-display text-lg font-bold tracking-tight">
-          <span className="text-primary">[hack_]</span>shelf
-          <span className="ml-0.5 inline-block h-4 w-2 translate-y-0.5 animate-blink bg-primary" aria-hidden />
+    <header className="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[68px] max-w-[1440px] items-center gap-10 px-5 md:px-10">
+        <Link href="/" className="flex items-center gap-2.5 font-display text-lg font-bold tracking-[-0.03em] text-ink">
+          <span
+            className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-ink font-mono text-sm font-bold text-lime"
+            aria-hidden
+          >
+            &gt;_
+            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-accent" />
+          </span>
+          Hack<span className="text-accent">Shelf</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
@@ -21,7 +27,7 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded px-3 py-1.5 font-mono text-sm text-muted transition-colors hover:bg-surface hover:text-primary"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-ink-3 transition-colors hover:bg-warm hover:text-ink"
             >
               {item.label}
             </Link>
@@ -31,23 +37,25 @@ export function Header() {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/login"
-            className="rounded px-3 py-1.5 font-mono text-sm text-muted transition-colors hover:text-ink"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-ink-3 transition-colors hover:text-ink"
           >
-            login
+            Log in
           </Link>
           <Link
             href="/signup"
-            className="rounded border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-glow-sm"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-dark hover:shadow-md"
           >
-            $ sign_up
+            Sign up
           </Link>
-          {/* Mobile nav toggle — wired to a details-free client toggle in a later pass */}
+          {/* Mobile nav toggle — wired to a client toggle in a later pass */}
           <button
             type="button"
             aria-label="Open menu"
-            className="ml-1 rounded border border-line p-1.5 font-mono text-muted md:hidden"
+            className="ml-1 rounded-lg border border-line p-2 text-ink-3 md:hidden"
           >
-            ≡
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
       </div>

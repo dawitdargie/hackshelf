@@ -1,15 +1,14 @@
 export function EmptyState({
-  message = "no results found",
+  message = "Nothing here yet",
   hint,
 }: {
   message?: string;
   hint?: string;
 }) {
   return (
-    <div className="terminal-panel flex flex-col items-center gap-2 px-6 py-16 text-center">
-      <p className="font-mono text-sm text-muted">
-        <span className="text-primary">[x]</span> {message}
-      </p>
+    <div className="paper-card flex flex-col items-center gap-2 px-6 py-16 text-center">
+      <span className="font-mono text-2xl text-line-2">&gt;_</span>
+      <p className="text-sm font-medium text-ink-3">{message}</p>
       {hint && <p className="meta-line">{hint}</p>}
     </div>
   );

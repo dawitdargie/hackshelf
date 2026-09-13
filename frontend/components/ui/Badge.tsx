@@ -1,10 +1,11 @@
-type Tone = "primary" | "accent" | "muted" | "danger";
+type Tone = "accent" | "teal" | "violet" | "amber" | "muted";
 
 const TONES: Record<Tone, string> = {
-  primary: "border-primary/40 bg-primary/10 text-primary",
-  accent: "border-accent/40 bg-accent/10 text-accent",
-  muted: "border-line bg-raised text-muted",
-  danger: "border-danger/40 bg-danger/10 text-danger",
+  accent: "bg-accent-soft text-accent-dark",
+  teal: "bg-teal-soft text-teal",
+  violet: "bg-violet-soft text-violet",
+  amber: "bg-amber-soft text-amber",
+  muted: "bg-warm text-ink-3",
 };
 
 export function Badge({
@@ -16,7 +17,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs ${TONES[tone]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-xs font-medium ${TONES[tone]}`}
     >
       {children}
     </span>
