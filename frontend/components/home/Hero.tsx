@@ -2,13 +2,7 @@ import Link from "next/link";
 
 // HackShelf — homepage hero (styled to match hack design/index.html):
 // full-bleed hackbg.avif background, 105deg dark overlay, Syne headline,
-// lime eyebrow, lime/outline CTAs, stats row. Styling only — real routes.
-
-const STATS = [
-  { value: "100%", label: "Free books" },
-  { value: "14+", label: "Topics covered" },
-  { value: "100%", label: "Legal & open" },
-];
+// lime eyebrow, lime/outline CTAs. Styling only — real routes.
 
 export function Hero() {
   return (
