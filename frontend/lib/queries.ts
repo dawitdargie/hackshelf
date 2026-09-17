@@ -7,6 +7,7 @@ import type {
   Author,
   BookListFilters,
   BookSummary,
+  Book,
   Category,
   Level,
   Paginated,
@@ -26,4 +27,8 @@ export function fetchCategories(params: { page?: number; limit?: number } = {}) 
 
 export function fetchAuthors(params: { page?: number; limit?: number } = {}) {
   return api.get<Paginated<Author>>("/authors", params);
+}
+
+export function fetchBookBySlug(slug: string) {
+  return api.get<Book>(`/books/${slug}`);
 }
