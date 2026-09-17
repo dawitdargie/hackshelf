@@ -6,11 +6,16 @@ import { api } from "@/lib/api";
 import type {
   Author,
   BookListFilters,
-  BookSummary,
   Book,
+  BookSummary,
   Category,
   Level,
   Paginated,
+  Topic,
+  LevelDetail,
+  CategoryDetail,
+  TopicDetail,
+  AuthorDetail,
 } from "@/types";
 
 export function fetchBookList(filters: BookListFilters = {}) {
@@ -25,10 +30,30 @@ export function fetchCategories(params: { page?: number; limit?: number } = {}) 
   return api.get<Paginated<Category>>("/categories", params);
 }
 
+export function fetchTopics(params: { page?: number; limit?: number } = {}) {
+  return api.get<Paginated<Topic>>("/topics", params);
+}
+
 export function fetchAuthors(params: { page?: number; limit?: number } = {}) {
   return api.get<Paginated<Author>>("/authors", params);
 }
 
 export function fetchBookBySlug(slug: string) {
   return api.get<Book>(`/books/${slug}`);
+}
+
+export function fetchLevelBySlug(slug: string) {
+  return api.get<LevelDetail>(`/levels/${slug}`);
+}
+
+export function fetchCategoryBySlug(slug: string) {
+  return api.get<CategoryDetail>(`/categories/${slug}`);
+}
+
+export function fetchTopicBySlug(slug: string) {
+  return api.get<TopicDetail>(`/topics/${slug}`);
+}
+
+export function fetchAuthorBySlug(slug: string) {
+  return api.get<AuthorDetail>(`/authors/${slug}`);
 }

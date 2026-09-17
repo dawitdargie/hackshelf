@@ -33,6 +33,21 @@ export interface AuthorDetail extends Author {
   books?: BookSummary[];
 }
 
+/** Level with its book summaries (levels.LevelDetail). */
+export interface LevelDetail extends Level {
+  books: BookSummary[];
+}
+
+/** Category with its book summaries (categories.CategoryDetail). */
+export interface CategoryDetail extends Category {
+  books: BookSummary[];
+}
+
+/** Topic with its book summaries (topics.TopicDetail). */
+export interface TopicDetail extends Topic {
+  books: BookSummary[];
+}
+
 // --- Books ---
 
 export interface RatingSummary {

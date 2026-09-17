@@ -70,7 +70,7 @@ export async function LevelsSection() {
 
   return (
     <section className="mx-auto max-w-[1440px] px-5 py-10 md:px-10">
-      <SectionHead label="Skill ladder" title="Learn at your" highlight="level" href="/levels" linkText="All levels" />
+      <SectionHead label="Skill ladder" title="Learn at your" highlight="level" href="/books" linkText="All levels" />
       {levels.length === 0 ? (
         <div className="paper-card px-6 py-10 text-center text-sm text-ink-3">
           Levels will appear here once the catalog is seeded.

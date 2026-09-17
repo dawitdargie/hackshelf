@@ -75,7 +75,7 @@ export async function CategoriesSection({ limit = 6 }: { limit?: number }) {
         label="Explore topics"
         title="Browse by"
         highlight="category"
-        href="/categories"
+        href="/books"
         linkText="All categories"
       />
       {categories.length === 0 ? (

@@ -4,17 +4,17 @@
 // levels, categories, topics, authors (+ by-slug detail variants).
 
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { fetchLevels, fetchCategories } from "@/lib/queries";
-import type {
-  Author,
-  AuthorDetail,
-  BookSummary,
-  Category,
-  Level,
-  Paginated,
-  Topic,
-} from "@/types";
+import {
+  fetchLevels,
+  fetchCategories,
+  fetchTopics,
+  fetchAuthors,
+  fetchLevelBySlug,
+  fetchCategoryBySlug,
+  fetchTopicBySlug,
+  fetchAuthorBySlug,
+} from "@/lib/queries";
+import type { AuthorDetail, LevelDetail, CategoryDetail, TopicDetail } from "@/types";
 
 export function useLevels() {
   return useQuery({
@@ -27,7 +27,7 @@ export function useLevels() {
 export function useLevel(slug: string | undefined) {
   return useQuery({
     queryKey: ["level", slug],
-    queryFn: () => api.get<Level & { books: BookSummary[] }>(`/levels/${slug}`),
+    queryFn: () => fetchLevelBySlug(slug!),
     enabled: Boolean(slug),
   });
 }
@@ -43,7 +43,7 @@ export function useCategories(params: { page?: number; limit?: number } = {}) {
 export function useCategory(slug: string | undefined) {
   return useQuery({
     queryKey: ["category", slug],
-    queryFn: () => api.get<Category & { books: BookSummary[] }>(`/categories/${slug}`),
+    queryFn: () => fetchCategoryBySlug(slug!),
     enabled: Boolean(slug),
   });
 }
@@ -51,7 +51,7 @@ export function useCategory(slug: string | undefined) {
 export function useTopics(params: { page?: number; limit?: number } = {}) {
   return useQuery({
     queryKey: ["topics", params],
-    queryFn: () => api.get<Paginated<Topic>>("/topics", params),
+    queryFn: () => fetchTopics(params),
     staleTime: Infinity,
   });
 }
@@ -59,7 +59,7 @@ export function useTopics(params: { page?: number; limit?: number } = {}) {
 export function useTopic(slug: string | undefined) {
   return useQuery({
     queryKey: ["topic", slug],
-    queryFn: () => api.get<Topic & { books: BookSummary[] }>(`/topics/${slug}`),
+    queryFn: () => fetchTopicBySlug(slug!),
     enabled: Boolean(slug),
   });
 }
@@ -67,7 +67,7 @@ export function useTopic(slug: string | undefined) {
 export function useAuthors(params: { page?: number; limit?: number } = {}) {
   return useQuery({
     queryKey: ["authors", params],
-    queryFn: () => api.get<Paginated<Author>>("/authors", params),
+    queryFn: () => fetchAuthors(params),
     staleTime: Infinity,
   });
 }
@@ -75,7 +75,10 @@ export function useAuthors(params: { page?: number; limit?: number } = {}) {
 export function useAuthor(slug: string | undefined) {
   return useQuery({
     queryKey: ["author", slug],
-    queryFn: () => api.get<AuthorDetail>(`/authors/${slug}`),
+    queryFn: () => fetchAuthorBySlug(slug!),
     enabled: Boolean(slug),
   });
 }
+
+// Re-export detail types for consumers.
+export type { LevelDetail, CategoryDetail, TopicDetail, AuthorDetail };
