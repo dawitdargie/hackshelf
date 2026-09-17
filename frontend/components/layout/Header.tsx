@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+// HackShelf — header (styled to match hack design/index.html):
+// centered plain-text nav, icon search button, bordered login, ink signup.
+
 const NAV = [
   { href: "/books", label: "Books" },
   { href: "/levels", label: "Levels" },
@@ -7,11 +10,41 @@ const NAV = [
   { href: "/authors", label: "Authors" },
 ];
 
+function IconSearch() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path d="M3 4h12M3 8h12M3 12h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 38×38 ghost icon button, shared by search + mobile menu (mockup .icon-btn). */
+function IconButton({ href, label, children }: { href?: string; label: string; children: React.ReactNode }) {
+  const classes =
+    "flex h-[38px] w-[38px] items-center justify-center rounded-[10px] text-ink-2 transition-colors hover:bg-warm hover:text-ink";
+  if (href) {
+    return (
+      <Link href={href} aria-label={label} title={label} className={classes}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" aria-label={label} title={label} className={`${classes} md:hidden`}>
+      {children}
+    </button>
+  );
+}
+
 export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-[68px] max-w-[1440px] items-center gap-10 px-5 md:px-10">
-        <Link href="/" className="flex items-center gap-2.5 font-display text-lg font-bold tracking-[-0.03em] text-ink">
+      <div className="mx-auto flex h-[68px] max-w-[1440px] items-center gap-6 px-5 md:px-10">
+        {/* Logo */}
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2.5 font-display text-lg font-bold tracking-[-0.03em] text-ink"
+        >
           <span
             className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-ink font-mono text-sm font-bold text-lime"
             aria-hidden
@@ -22,41 +55,47 @@ export function Header() {
           Hack<span className="text-accent">Shelf</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+        {/* Centered nav — plain text links, hover to accent (mockup .nav-main) */}
+        <nav
+          className="hidden flex-1 items-center justify-center gap-8 md:flex"
+          aria-label="Main"
+        >
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-ink-3 transition-colors hover:bg-warm hover:text-ink"
+              className="py-1 text-[13.5px] font-medium tracking-[-0.01em] text-ink-3 transition-colors hover:text-accent"
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
+        {/* Actions: search icon → login → signup free → mobile menu */}
         <div className="ml-auto flex items-center gap-2">
+          <IconButton href="/books" label="Search">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </IconButton>
+
           <Link
             href="/login"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-ink-3 transition-colors hover:text-ink"
+            className="hidden rounded-[10px] border border-line-2 px-[18px] py-[9px] text-[13.5px] font-semibold tracking-[-0.01em] text-ink transition-colors hover:border-ink hover:bg-warm sm:inline-flex"
           >
             Log in
           </Link>
           <Link
             href="/signup"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-dark hover:shadow-md"
+            className="hidden rounded-[10px] bg-ink px-[18px] py-[9px] text-[13.5px] font-semibold tracking-[-0.01em] text-white transition-colors hover:bg-accent sm:inline-flex"
           >
-            Sign up
+            Sign up free
           </Link>
-          {/* Mobile nav toggle — wired to a client toggle in a later pass */}
-          <button
-            type="button"
-            aria-label="Open menu"
-            className="ml-1 rounded-lg border border-line p-2 text-ink-3 md:hidden"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-              <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
+
+          <IconButton label="Menu">
+            <IconSearch />
+          </IconButton>
         </div>
       </div>
     </header>

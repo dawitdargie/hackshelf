@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { SearchBar } from "@/components/home/SearchBar";
+import { Hero } from "@/components/home/Hero";
 import { BooksSection } from "@/components/home/BooksSection";
 import { LevelsSection } from "@/components/home/LevelsSection";
 import { CategoriesSection } from "@/components/home/CategoriesSection";
@@ -38,25 +38,8 @@ function SectionFallback() {
 export default function HomePage() {
   return (
     <>
-      {/* Hero — warm band, Syne headline, search into the catalog */}
-      <section className="border-b border-line bg-warm">
-        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-10 md:py-24">
-          <p className="section-label mb-4">Free &amp; legal · Read in browser</p>
-          <h1 className="max-w-3xl font-display text-4xl font-extrabold leading-[1.1] tracking-[-0.02em] text-ink md:text-6xl">
-            The hacker&apos;s bookshelf.
-            <br />
-            <span className="text-accent">100% free.</span> Read in your browser.
-          </h1>
-          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-ink-3">
-            A curated collection of legally hosted hacking and cybersecurity
-            books — from first recon to advanced exploitation. No paywalls, no
-            PDFs to hunt down. Just read.
-          </p>
-          <div className="mt-8">
-            <SearchBar />
-          </div>
-        </div>
-      </section>
+      {/* Hero — dark hackbg.avif image, lime accents (mockup) */}
+      <Hero />
 
       {/* Popular / highly rated */}
       <Suspense fallback={<SectionFallback />}>
