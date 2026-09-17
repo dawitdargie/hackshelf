@@ -132,6 +132,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/**
+ * Redirect authenticated users away from auth pages (Phase 18).
+ * Renders null while loading so the form never flashes.
+ */
+export function useRedirectIfAuthed(nextPath = "/library") {
+  const { status } = useAuth();
+  useEffect(() => {
+    if (status === "authenticated") {
+      window.location.assign(nextPath);
+    }
+  }, [status, nextPath]);
+  return { isAuthed: status === "authenticated", isLoading: status === "loading" };
+}
+
 async function readRefreshToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
   const res = await fetch("/api/auth/session", { method: "GET" });
