@@ -40,6 +40,100 @@
   .meta-line strong {
     @apply font-medium text-ink;
   }
+
+  /* Reader prose — hosted chapter markdown (Phase 20) */
+  .reader-prose {
+    @apply leading-[1.75] text-ink;
+  }
+  .reader-prose > * + * {
+    @apply mt-4;
+  }
+  .reader-prose h1 {
+    @apply mt-8 font-display text-2xl font-bold tracking-[-0.02em];
+  }
+  .reader-prose h2 {
+    @apply mt-8 font-display text-xl font-bold tracking-[-0.02em];
+  }
+  .reader-prose h3 {
+    @apply mt-6 text-base font-semibold;
+  }
+  .reader-prose p {
+    @apply text-ink-2;
+  }
+  .reader-prose a {
+    @apply font-medium text-accent-dark underline underline-offset-2;
+  }
+  .reader-prose strong {
+    @apply font-semibold text-ink;
+  }
+  .reader-prose ul,
+  .reader-prose ol {
+    @apply space-y-1 pl-6;
+  }
+  .reader-prose ul {
+    @apply list-disc;
+  }
+  .reader-prose ol {
+    @apply list-decimal;
+  }
+  .reader-prose li {
+    @apply text-ink-2;
+  }
+  .reader-prose blockquote {
+    @apply border-l-2 border-accent/40 pl-4 text-ink-3 italic;
+  }
+  .reader-prose code {
+    @apply rounded bg-warm px-1.5 py-0.5 font-mono text-[13px];
+  }
+  .reader-prose pre {
+    @apply overflow-x-auto rounded-lg border border-line bg-warm p-4 text-[13px];
+  }
+  .reader-prose pre code {
+    @apply bg-transparent p-0;
+  }
+  .reader-prose hr {
+    @apply border-line;
+  }
+  .reader-prose img {
+    @apply h-auto max-w-full rounded-lg;
+  }
+  .reader-prose table {
+    @apply w-full border-collapse text-sm;
+  }
+  .reader-prose th,
+  .reader-prose td {
+    @apply border border-line px-3 py-2 text-left;
+  }
+
+  /* Dark reading mode surface */
+  .reader-prose--dark,
+  .reader-prose--dark p,
+  .reader-prose--dark li {
+    @apply text-[#e8e6e1];
+  }
+  .reader-prose--dark h1,
+  .reader-prose--dark h2,
+  .reader-prose--dark h3,
+  .reader-prose--dark strong {
+    @apply text-white;
+  }
+  .reader-prose--dark code {
+    @apply bg-white/10;
+  }
+  .reader-prose--dark pre {
+    @apply border-transparent bg-white/10;
+  }
+  .reader-prose--dark a {
+    @apply text-lime;
+  }
+  .reader-prose--dark blockquote {
+    @apply text-[#c9c7c2];
+  }
+
+  /* In-chapter search highlights (Phase 20) */
+  .reader-highlight {
+    @apply rounded bg-lime px-0.5 text-ink;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

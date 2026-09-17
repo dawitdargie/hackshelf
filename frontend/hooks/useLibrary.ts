@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type {
   Bookmark,
   BookmarkCreateInput,
@@ -101,6 +101,10 @@ export function useProgress(bookId: string | undefined) {
     queryFn: () =>
       api.getAuthed<ReadingProgress>(`/me/books/${bookId}/progress`),
     enabled: Boolean(bookId) && status === "authenticated",
+    // A reader who never opened the book gets 404 PROGRESS_NOT_FOUND — that is
+    // "no progress", so don't retry it (the reader treats it as null).
+    retry: (count, error) =>
+      !(error instanceof ApiError && error.isNotFound) && count < 1,
   });
 }
 
