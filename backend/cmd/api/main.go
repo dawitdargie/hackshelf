@@ -9,6 +9,9 @@ import (
 )
 
 func main() {
+	// Load .env when present (local development); real env vars always win.
+	config.LoadDotEnv()
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {

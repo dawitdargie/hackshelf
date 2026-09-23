@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strconv"
+	"time"
 )
 
 // Config holds all application configuration loaded from environment variables.
@@ -14,6 +17,22 @@ type Config struct {
 	RefreshTokenExpiry string
 	FrontendURL        string
 	Port               string
+
+	// Rate limiting configuration.
+	RateLimitAuth    int           // Max auth requests (login/signup/etc.) per window per IP
+	RateLimitGeneral int           // Max general requests per window per IP
+	RateLimitWindow  time.Duration // Rate limit window
+	TrustProxy       bool          // Trust X-Forwarded-For header (only when behind a known proxy)
+
+	// Email delivery configuration.
+	EmailMode   string // "dev" (log to stdout) or "smtp" (send via SMTP)
+	SMTPHost    string
+	SMTPPort    int
+	SMTPUser    string
+	SMTPPass    string
+	SMTPUseTLS  bool
+	SMTPLocalName string
+	SMTPFrom    string
 }
 
 // Load reads configuration from environment variables.
@@ -27,6 +46,12 @@ func Load() (*Config, error) {
 		RefreshTokenExpiry: os.Getenv("REFRESH_TOKEN_EXPIRES"),
 		FrontendURL:        os.Getenv("FRONTEND_URL"),
 		Port:               os.Getenv("PORT"),
+		EmailMode:          os.Getenv("EMAIL_MODE"),
+		SMTPHost:           os.Getenv("SMTP_HOST"),
+		SMTPUser:           os.Getenv("SMTP_USER"),
+		SMTPPass:           os.Getenv("SMTP_PASS"),
+		SMTPLocalName:      os.Getenv("SMTP_LOCAL_NAME"),
+		SMTPFrom:           os.Getenv("SMTP_FROM"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -51,5 +76,57 @@ func Load() (*Config, error) {
 		cfg.RefreshTokenExpiry = "7d"
 	}
 
+	// Rate limiting: generous defaults so a normal user (failed attempts
+	// included) never locks themselves out during a single minute.
+	cfg.RateLimitAuth = envInt("RATE_LIMIT_AUTH", 20)
+	cfg.RateLimitGeneral = envInt("RATE_LIMIT_GENERAL", 120)
+	if w, err := time.ParseDuration(os.Getenv("RATE_LIMIT_WINDOW")); err == nil && w > 0 {
+		cfg.RateLimitWindow = w
+	} else {
+		cfg.RateLimitWindow = time.Minute
+	}
+	switch os.Getenv("TRUST_PROXY") {
+	case "1", "true":
+		cfg.TrustProxy = true
+	}
+
+	// Parse SMTP port; 587 is the standard submission port (STARTTLS).
+	if cfg.EmailMode == "smtp" {
+		if cfg.SMTPPort == 0 {
+			if p, err := strconv.Atoi(os.Getenv("SMTP_PORT")); err == nil {
+				cfg.SMTPPort = p
+			}
+		}
+		if cfg.SMTPPort == 0 {
+			cfg.SMTPPort = 587
+		}
+		if cfg.SMTPUseTLS {
+			// nothing to parse, already bool zero value = false unless set
+		}
+		// SMTPUseTLS is set from env below if present.
+		if v := os.Getenv("SMTP_USE_TLS"); v == "1" || v == "true" {
+			cfg.SMTPUseTLS = true
+		}
+		if cfg.SMTPHost == "" || cfg.SMTPUser == "" || cfg.SMTPPass == "" {
+			log.Printf("[config] WARNING: EMAIL_MODE=smtp but SMTP_HOST/SMTP_USER/SMTP_PASS incomplete - email will NOT be sent")
+		}
+		// Default from address when not configured.
+		if cfg.SMTPFrom == "" {
+			cfg.SMTPFrom = "noreply@hackshelf.example"
+		}
+		// Local name defaults to the host name of the machine; fall back to a safe default.
+		if cfg.SMTPLocalName == "" {
+			cfg.SMTPLocalName = "hackshelf"
+		}
+	}
+
 	return cfg, nil
+}
+
+// envInt reads an integer env var with a fallback default.
+func envInt(key string, fallback int) int {
+	if v, err := strconv.Atoi(os.Getenv(key)); err == nil && v > 0 {
+		return v
+	}
+	return fallback
 }

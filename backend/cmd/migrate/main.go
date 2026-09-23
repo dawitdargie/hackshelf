@@ -10,9 +10,14 @@ import (
 	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"hackshelf/backend/internal/config"
 )
 
 func main() {
+	// Load .env when present (local development); real env vars always win.
+	config.LoadDotEnv()
+
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL environment variable is required")

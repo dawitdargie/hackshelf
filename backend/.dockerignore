@@ -1,0 +1,8 @@
+# Build context exclusions for the backend image.
+.env
+.env.*
+*.exe
+bin/
+dist/
+target/
+*.log
