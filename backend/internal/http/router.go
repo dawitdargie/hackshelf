@@ -1,11 +1,13 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"time"
 
 	"hackshelf/backend/internal/auth"
 	"hackshelf/backend/internal/authors"
+	"hackshelf/backend/internal/admin"
 	"hackshelf/backend/internal/bookmarks"
 	"hackshelf/backend/internal/books"
 	"hackshelf/backend/internal/categories"
@@ -39,7 +41,9 @@ type Router struct {
 	libraryHandler  *library.Handler
 	bookmarkHandler *bookmarks.Handler
 	progressHandler *progress.Handler
+	adminHandler    *admin.Handler
 	authMiddleware  func(http.Handler) http.Handler
+	adminMiddleware func(http.Handler) http.Handler
 	handler         http.Handler
 }
 
@@ -62,7 +66,7 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 	authService := auth.NewAuthService(
 		userService,
 		refreshTokenRepo,
-		email.NewDevEmailSender(),
+		newEmailSender(cfg),
 		cfg.JWTAccessSecret,
 		cfg.JWTRefreshSecret,
 		accessTokenExpiry,
@@ -71,6 +75,10 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 	authHandler := auth.NewAuthHandler(authService)
 	tokenHandler := auth.NewTokenHandler(authService)
 	authMiddleware := auth.AuthMiddleware(cfg.JWTAccessSecret)
+	adminMiddleware := auth.RequireAdmin(userRepo)
+
+	// Admin catalog management (auth routes guard every /api/v1/admin path).
+	adminHandler := admin.NewHandler(db.Pool)
 
 	// Build book dependencies (Phase 7)
 	bookRepo := books.NewBookRepository(db.Pool)
@@ -109,15 +117,21 @@ func NewRouter(db *database.DB, cfg *config.Config) *Router {
 		libraryHandler:  libraryHandler,
 		bookmarkHandler: bookmarkHandler,
 		progressHandler: progressHandler,
+		adminHandler:    adminHandler,
 		authMiddleware:  authMiddleware,
+		adminMiddleware: adminMiddleware,
 	}
 	r.registerRoutes()
 
 	// Build the middleware chain ONCE so rate limiter state persists between requests.
+	// Order (outermost first): Logger -> Compress -> CORS -> RateLimit -> Recover -> PublicETag -> mux.
+	// PublicETag is innermost because it hashes the raw body before Compress encodes it.
 	var handler http.Handler = r.mux
+	handler = middleware.PublicETag(handler)
 	handler = middleware.Recover(handler)
-	handler = middleware.RateLimit(10, 60, time.Minute)(handler)
+	handler = middleware.RateLimit(r.cfg.RateLimitAuth, r.cfg.RateLimitGeneral, r.cfg.RateLimitWindow, r.cfg.TrustProxy)(handler)
 	handler = middleware.CORS(r.cfg.FrontendURL)(handler)
+	handler = middleware.Compress(handler)
 	handler = middleware.Logger(handler)
 	r.handler = handler
 
@@ -139,6 +153,7 @@ func (r *Router) registerRoutes() {
 	// Authenticated routes
 	r.mux.Handle("POST /api/v1/auth/logout", r.authMiddleware(http.HandlerFunc(r.tokenHandler.Logout)))
 	r.mux.Handle("GET /api/v1/me", r.authMiddleware(http.HandlerFunc(r.tokenHandler.Me)))
+	r.mux.Handle("PATCH /api/v1/me", r.authMiddleware(http.HandlerFunc(r.tokenHandler.PatchMe)))
 
 	// Public book routes (Phase 7)
 	r.mux.HandleFunc("GET /api/v1/books", r.bookHandler.List)
@@ -161,6 +176,7 @@ func (r *Router) registerRoutes() {
 
 	// Authenticated rating and review routes (Phase 10)
 	r.mux.Handle("PUT /api/v1/books/{bookId}/rating", r.authMiddleware(http.HandlerFunc(r.ratingHandler.Upsert)))
+	r.mux.Handle("GET /api/v1/books/{bookId}/rating", r.authMiddleware(http.HandlerFunc(r.ratingHandler.Get)))
 	r.mux.Handle("DELETE /api/v1/books/{bookId}/rating", r.authMiddleware(http.HandlerFunc(r.ratingHandler.Delete)))
 	r.mux.Handle("POST /api/v1/books/{bookId}/reviews", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Create)))
 	r.mux.Handle("PUT /api/v1/reviews/{reviewId}", r.authMiddleware(http.HandlerFunc(r.reviewHandler.Update)))
@@ -181,11 +197,40 @@ func (r *Router) registerRoutes() {
 	r.mux.Handle("GET /api/v1/me/books/{bookId}/progress", r.authMiddleware(http.HandlerFunc(r.progressHandler.Get)))
 	r.mux.Handle("PUT /api/v1/me/books/{bookId}/progress", r.authMiddleware(http.HandlerFunc(r.progressHandler.Upsert)))
 	r.mux.Handle("DELETE /api/v1/me/books/{bookId}/progress", r.authMiddleware(http.HandlerFunc(r.progressHandler.Delete)))
+
+	// Admin: catalog management (Milestone 2/3). Both middlewares wrap each
+	// route: authentication first, then the admin-role check.
+	r.mux.Handle("GET /api/v1/admin/books", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.ListBooks))))
+	r.mux.Handle("GET /api/v1/admin/books/{bookId}", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.GetBook))))
+r.mux.Handle("POST /api/v1/admin/books", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.CreateBook))))
+	r.mux.Handle("PUT /api/v1/admin/books/{bookId}", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.UpdateBook))))
+	r.mux.Handle("DELETE /api/v1/admin/books/{bookId}", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.DeleteBook))))
+	r.mux.Handle("POST /api/v1/admin/categories", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.CreateCategory))))
+	r.mux.Handle("POST /api/v1/admin/topics", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.CreateTopic))))
+	r.mux.Handle("POST /api/v1/admin/authors", r.authMiddleware(r.adminMiddleware(http.HandlerFunc(r.adminHandler.CreateAuthor))))
 }
 
 // handleHealth returns the health status of the API.
 func (r *Router) handleHealth(w http.ResponseWriter, req *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// newEmailSender returns the appropriate email sender based on configuration.
+func newEmailSender(cfg *config.Config) email.EmailSender {
+	if cfg.EmailMode == "smtp" && cfg.SMTPHost != "" {
+		log.Printf("[email] using SMTPSender(%s:%d) from=%s", cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom)
+		return email.NewSMTPSender(
+			cfg.SMTPHost,
+			cfg.SMTPPort,
+			cfg.SMTPUser,
+			cfg.SMTPPass,
+			cfg.SMTPFrom,
+			cfg.SMTPLocalName,
+			cfg.FrontendURL,
+		)
+	}
+	log.Printf("[email] using DevEmailSender - emails are logged to stdout, not sent")
+	return email.NewDevEmailSender(cfg.FrontendURL)
 }
 
 // ServeHTTP implements http.Handler.
