@@ -4,6 +4,8 @@
 # JWT secrets are generated automatically.
 #
 # The frontend is served by Vercel (see README, Deployment section).
+# Note: pre-deploy commands are not available on the free plan, so migrations
+# are applied manually from a machine with Go installed (see README).
 
 services:
   - type: web
@@ -13,8 +15,6 @@ services:
     plan: free
     healthCheckPath: /health
     autoDeploy: true
-    # Runs the SQL migrations (idempotent) before the new release goes live.
-    preDeployCommand: migrate
     envVars:
       - key: DATABASE_URL
         sync: false

@@ -179,7 +179,12 @@ Set these environment variables in the Render dashboard:
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`: generated automatically by the Blueprint, or `openssl rand -hex 32`
 - `TRUST_PROXY`: `1` (rate limiting then uses real client IPs behind Render's proxy)
 
-`render.yaml` also configures the pre-deploy command `migrate`, which applies pending SQL migrations before each new release goes live. The migrations ship inside the Docker image for this purpose. If pre-deploy commands are unavailable on the free plan, run the migrate command from your machine as shown above.
+Migrations are **not** run automatically: pre-deploy commands are a paid Render feature and are unavailable on the free plan. The `migrate` binary and `migrations/` folder still ship inside the Docker image for future use. After any change that adds a migration, apply it from your machine before relying on the new schema:
+
+```bash
+cd backend
+DATABASE_URL="neon-pooled-url" go run ./cmd/migrate
+```
 
 ### 3. Frontend: Vercel
 
