@@ -5,9 +5,12 @@
 
 import Link from "next/link";
 import { BookCard } from "@/components/ui/BookCard";
+import { useCoverCategoryMap } from "@/hooks/useCoverCategories";
 import type { BookSummary } from "@/types";
 
 export function SavedBooksSection({ books }: { books: BookSummary[] }) {
+  const coverCategories = useCoverCategoryMap();
+
   if (books.length === 0) {
     return (
       <div className="paper-card px-6 py-14 text-center">
@@ -26,7 +29,7 @@ export function SavedBooksSection({ books }: { books: BookSummary[] }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {books.map((book) => (
-        <BookCard key={book.id} book={book} />
+        <BookCard key={book.id} book={book} coverCategory={coverCategories[book.id] ?? null} />
       ))}
     </div>
   );

@@ -15,14 +15,6 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto w-full max-w-[1440px] px-5 py-[70px] md:px-10 md:py-[100px]">
         <div className="max-w-[640px]">
-          {/* Eyebrow — mono, lime (mockup .hero-eyebrow) */}
-          <p className="mb-6 inline-flex items-center gap-2.5 font-mono text-xs font-medium tracking-[1px] text-lime">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
-              <path d="M2 3l4 4-4 4M7 11h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            free · legal · no ads
-          </p>
-
           {/* Headline — Syne, clamp 44–72px, white, lime em (mockup .hero h1) */}
           <h1 className="mb-[22px] font-display text-[clamp(2.75rem,6vw,4.5rem)] font-bold leading-[1.02] tracking-[-2.2px] text-white md:tracking-[-1.5px]">
             Hacking books

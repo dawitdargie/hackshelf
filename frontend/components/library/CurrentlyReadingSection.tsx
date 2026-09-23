@@ -4,10 +4,13 @@
 // "continue reading" rows: cover, title, progress bar, continue link.
 
 import Link from "next/link";
-import Image from "next/image";
+import { BookCover } from "@/components/ui/BookCover";
+import { useCoverCategoryMap } from "@/hooks/useCoverCategories";
 import type { ReadingItem } from "@/types";
 
 export function CurrentlyReadingSection({ items }: { items: ReadingItem[] }) {
+  const coverCategories = useCoverCategoryMap();
+
   if (items.length === 0) {
     return (
       <div className="paper-card px-6 py-14 text-center">
@@ -17,7 +20,7 @@ export function CurrentlyReadingSection({ items }: { items: ReadingItem[] }) {
           href="/books"
           className="mt-4 inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-dark"
         >
-          Find a book
+          Find a boo
         </Link>
       </div>
     );
@@ -29,20 +32,14 @@ export function CurrentlyReadingSection({ items }: { items: ReadingItem[] }) {
         const pct = Math.min(100, Math.max(0, Math.round(item.percentage)));
         return (
           <li key={item.book.id} className="paper-card flex items-center gap-4 p-4">
-            <div className="relative h-[72px] w-[54px] shrink-0 overflow-hidden rounded-md border border-line bg-accent-soft">
-              {item.book.cover_url ? (
-                <Image
-                  src={item.book.cover_url}
-                  alt={`Cover of ${item.book.title}`}
-                  fill
-                  sizes="54px"
-                  className="object-cover"
-                />
-              ) : (
-                <span className="flex h-full items-center justify-center font-mono text-xs text-accent/50">
-                  &gt;_
-                </span>
-              )}
+            <div className="h-[72px] w-[54px] shrink-0 overflow-hidden rounded-md border border-line">
+              <BookCover
+                slug={item.book.slug}
+                title={item.book.title}
+                levelName={item.book.level.name}
+                category={coverCategories[item.book.id] ?? item.book.category ?? null}
+                compact
+              />
             </div>
 
             <div className="min-w-0 flex-1">
