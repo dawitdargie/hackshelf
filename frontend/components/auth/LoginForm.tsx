@@ -4,19 +4,18 @@
 // backend's validation; errors mapped from the backend error codes.
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/lib/auth";
 import { loginSchema, apiErrorToFieldErrors, type LoginValues } from "@/lib/validators";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
-export function LoginForm() {
+export function LoginForm({ nextPath = "/library" }: { nextPath?: string }) {
   const { login } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") ?? "/library";
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -42,6 +41,8 @@ export function LoginForm() {
     }
   }
 
+  const nextQuery = nextPath !== "/library" ? `?next=${encodeURIComponent(nextPath)}` : "";
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
       {formError && (
@@ -59,9 +60,8 @@ export function LoginForm() {
         aria-invalid={Boolean(errors.email)}
         {...register("email")}
       />
-      <Input
+      <PasswordInput
         label="Password"
-        type="password"
         autoComplete="current-password"
         placeholder="••••••••"
         error={errors.password?.message}
@@ -69,11 +69,13 @@ export function LoginForm() {
         {...register("password")}
       />
 
-      {/* Placeholder per spec — forgot-password UI is a later milestone */}
       <div className="text-right">
-        <span className="cursor-not-allowed text-xs text-muted" title="Coming soon">
+        <Link
+          href={`/forgot-password${nextQuery}`}
+          className="text-xs font-medium text-accent-dark underline-offset-2 hover:underline"
+        >
           Forgot password?
-        </span>
+        </Link>
       </div>
 
       <button
@@ -87,7 +89,7 @@ export function LoginForm() {
       <p className="text-center text-sm text-ink-3">
         New here?{" "}
         <Link
-          href={`/signup${nextPath !== "/library" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
+          href={`/signup${nextQuery}`}
           className="font-semibold text-accent-dark underline-offset-2 hover:underline"
         >
           Create a free account

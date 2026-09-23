@@ -19,7 +19,7 @@ export function ProfileInfo() {
       </span>
       <div className="min-w-0">
         <h2 className="font-display text-lg font-bold tracking-[-0.02em] text-ink">
-          {user?.username ?? "…"}
+          {user?.display_name || user?.username || "…"}
         </h2>
         <p className="meta-line truncate">{user?.email ?? "…"}</p>
         {user?.created_at && (

@@ -16,9 +16,12 @@ import {
 } from "react";
 import {
   api,
+  clearSessionCookie,
+  refreshAccessToken,
   registerTokenRefresher,
   setAccessToken,
 } from "@/lib/api";
+import { sanitizeNextPath } from "@/lib/validators";
 import type {
   AuthResponse,
   RefreshResponse,
@@ -33,6 +36,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<User>;
   signup: (username: string, email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
+  /** Refresh the in-memory user after a profile edit (PATCH /me). */
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -48,20 +53,31 @@ async function persistRefreshToken(refreshToken: string) {
 
 // Register the refresh implementation with the API client (avoids an import
 // cycle: lib/auth imports lib/api, never the other way around).
-registerTokenRefresher((refreshToken) =>
-  api.rawPost<RefreshResponse>("/auth/refresh", { refresh_token: refreshToken }),
-);
+//
+// The backend rotates the refresh token on every use and revokes the old one,
+// so the rotated token must be written back into the HttpOnly cookie straight
+// away. Without this write-back the cookie keeps a dead token and the next
+// boot refresh fails, silently logging the user out on reload.
+registerTokenRefresher(async (refreshToken) => {
+  const tokens = await api.rawPost<RefreshResponse>("/auth/refresh", {
+    refresh_token: refreshToken,
+  });
+  await persistRefreshToken(tokens.refresh_token);
+  return tokens;
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 
   // Boot: restore the session from the HttpOnly refresh cookie if present.
+  // Uses the client's single-flight refresher so there is exactly one code
+  // path that rotates + persists refresh tokens.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        await refreshAccessTokenSafe();
+        await refreshAccessToken();
         const me = await api.getAuthed<User>("/me");
         if (!cancelled) {
           setUser(me);
@@ -119,49 +135,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // token already expired/revoked — proceed with local logout
     }
     setAccessToken(null);
-    await fetch("/api/auth/session", { method: "DELETE" });
+    await clearSessionCookie();
     setUser(null);
     setStatus("unauthenticated");
   }, []);
 
+  const updateUser = useCallback((u: User) => setUser(u), []);
+
   const value = useMemo(
-    () => ({ user, status, login, signup, logout }),
-    [user, status, login, signup, logout],
+    () => ({ user, status, login, signup, logout, updateUser }),
+    [user, status, login, signup, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-/**
- * Redirect authenticated users away from auth pages (Phase 18).
- * Renders null while loading so the form never flashes.
- */
-export function useRedirectIfAuthed(nextPath = "/library") {
-  const { status } = useAuth();
-  useEffect(() => {
-    if (status === "authenticated") {
-      window.location.assign(nextPath);
-    }
-  }, [status, nextPath]);
-  return { isAuthed: status === "authenticated", isLoading: status === "loading" };
-}
-
-async function readRefreshToken(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-  const res = await fetch("/api/auth/session", { method: "GET" });
-  if (!res.ok) return null;
-  const body = (await res.json()) as { refresh_token?: string | null };
-  return body.refresh_token ?? null;
-}
-
-/** Refresh via the client's single-flight refresher; swallow "nothing to refresh". */
-async function refreshAccessTokenSafe() {
-  const refreshToken = await readRefreshToken();
-  if (!refreshToken) throw new Error("no session");
-  const res = await api.rawPost<RefreshResponse>("/auth/refresh", {
-    refresh_token: refreshToken,
-  });
-  setAccessToken(res.access_token);
 }
 
 export function useAuth() {
@@ -170,16 +156,26 @@ export function useAuth() {
   return ctx;
 }
 
+/** Read the refresh token from the HttpOnly session cookie (browser only). */
+async function readRefreshToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  const res = await fetch("/api/auth/session", { method: "GET" });
+  if (!res.ok) return null;
+  const body = (await res.json()) as { refresh_token?: string | null };
+  return body.refresh_token ?? null;
+}
+
 /**
  * Protected-route helper: call in a client component to redirect
  * unauthenticated users to /login, returning to `next` afterwards.
  */
 export function useRequireAuth(nextPath = "/library") {
   const { status } = useAuth();
+  const target = sanitizeNextPath(nextPath);
   useEffect(() => {
     if (status === "unauthenticated") {
-      window.location.assign(`/login?next=${encodeURIComponent(nextPath)}`);
+      window.location.assign(`/login?next=${encodeURIComponent(target)}`);
     }
-  }, [status, nextPath]);
+  }, [status, target]);
   return { ready: status === "authenticated", status };
 }

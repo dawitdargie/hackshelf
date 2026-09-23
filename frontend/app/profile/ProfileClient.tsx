@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, useRequireAuth } from "@/lib/auth";
 import { useBookmarks, useLibrary } from "@/hooks/useLibrary";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
+import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ActivitySummary } from "@/components/profile/ActivitySummary";
 import { LoadingState } from "@/components/ui/LoadingState";
 
@@ -42,6 +43,8 @@ export default function ProfileClient() {
 
       <div className="space-y-4">
         <ProfileInfo />
+
+        <ProfileEditForm />
 
         <div className="paper-card p-6">
           <div className="section-label mb-4">Activity</div>

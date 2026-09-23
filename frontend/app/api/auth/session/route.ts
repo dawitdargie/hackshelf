@@ -7,7 +7,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const COOKIE_NAME = "hackshelf_refresh";
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+// Matches the backend's REFRESH_TOKEN_EXPIRY default (7 days). Keeping the
+// cookie alive longer would only store a token the API already expired.
+const MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 export async function POST(request: Request) {
   const { refresh_token: refreshToken } = await request.json();

@@ -30,8 +30,43 @@ export const signupSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .regex(EMAIL_REGEX, "Invalid email address"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type SignupValues = z.infer<typeof signupSchema>;
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+
+/**
+ * Only same-origin relative paths are allowed for `?next=` redirects, so a
+ * crafted link such as /login?next=https://evil.example cannot bounce a freshly
+ * authenticated user off-site. Anything absolute, protocol-relative (`//host`),
+ * backslash-based, or carrying a scheme is discarded in favour of `fallback`.
+ */
+export function sanitizeNextPath(
+  raw: string | null | undefined,
+  fallback = "/library",
+): string {
+  if (!raw) return fallback;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+  if (raw.includes("\\") || raw.includes(":")) return fallback;
+  return raw;
+}
 
 export type FieldErrors = Partial<Record<"username" | "email" | "password", string>>;
 
@@ -48,6 +83,12 @@ export function apiErrorToFieldErrors(
       return { fieldErrors: { email: error.message } };
     case "USERNAME_TAKEN":
       return { fieldErrors: { username: error.message } };
+    case "RATE_LIMITED":
+      return {
+        fieldErrors: {},
+        formError:
+          "Too many attempts. Please wait about a minute before trying again.",
+      };
     case "INVALID_CREDENTIALS":
       return { fieldErrors: {}, formError: error.message };
     case "VALIDATION_ERROR":
@@ -56,4 +97,15 @@ export function apiErrorToFieldErrors(
     default:
       return { fieldErrors: {}, formError: error.message };
   }
+}
+/**
+ * Slugify a string: lowercase, remove non-word chars, replace spaces with hyphens.
+ */
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
