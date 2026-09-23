@@ -234,3 +234,9 @@ func (s *AuthService) Me(ctx context.Context, userID string) (*users.User, *midd
 	}
 	return user, nil
 }
+
+// UpdateProfile updates the authenticated user's display_name and/or bio.
+// Email remains read-only in v1.
+func (s *AuthService) UpdateProfile(ctx context.Context, userID, displayName, bio string) (*users.User, *middleware.AppError) {
+	return s.userService.UpdateProfile(ctx, userID, displayName, bio)
+}

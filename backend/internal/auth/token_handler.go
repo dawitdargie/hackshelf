@@ -150,3 +150,38 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(dataResponse{Data: data})
 }
+
+// patchProfileRequest is the request body for PATCH /api/v1/me.
+type patchProfileRequest struct {
+DisplayName *string `json:"display_name,omitempty"`
+Bio        *string `json:"bio,omitempty"`
+}
+
+// PatchMe handles PATCH /api/v1/me (authentication required).
+// Updates the authenticated user's display_name and/or bio. Email is read-only.
+func (h *TokenHandler) PatchMe(w http.ResponseWriter, r *http.Request) {
+req, appErr := decodeJSONBody[patchProfileRequest](w, r)
+if appErr != nil {
+return
+}
+
+userID := UserIDFromContext(r.Context())
+
+// Resolve display_name: if nil/empty, pass empty string to DB (backfilled default).
+displayName := ""
+if req.DisplayName != nil {
+displayName = *req.DisplayName
+}
+bio := ""
+if req.Bio != nil {
+bio = *req.Bio
+}
+
+user, appErr := h.service.UpdateProfile(r.Context(), userID, displayName, bio)
+if appErr != nil {
+middleware.WriteError(w, appErr.Status, appErr.Code, appErr.Message)
+return
+}
+
+writeJSON(w, http.StatusOK, user)
+}

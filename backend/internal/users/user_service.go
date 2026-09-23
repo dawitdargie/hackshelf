@@ -108,3 +108,30 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID, passwordHash s
 	}
 	return nil
 }
+
+// UpdateProfile updates a user's display_name and bio.
+// Email remains read-only in v1.
+func (s *UserService) UpdateProfile(ctx context.Context, userID, displayName, bio string) (*User, *middleware.AppError) {
+// Validate display_name: 0..50 chars, letters/numbers/spaces/punctuation only.
+displayName = strings.TrimSpace(displayName)
+if len(displayName) > 50 {
+return nil, middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "Display name must be at most 50 characters")
+}
+// Validate bio: 0..500 chars.
+bio = strings.TrimSpace(bio)
+if len(bio) > 500 {
+return nil, middleware.NewAppError(http.StatusUnprocessableEntity, "VALIDATION_ERROR", "Bio must be at most 500 characters")
+}
+
+// Update in DB.
+if err := s.repo.UpdateProfile(ctx, userID, displayName, bio); err != nil {
+return nil, middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "Something went wrong")
+}
+
+// Return the updated user.
+user, appErr := s.FindByID(ctx, userID)
+if appErr != nil {
+return nil, appErr
+}
+return user, nil
+}
