@@ -11,6 +11,14 @@
     @apply bg-bg text-ink antialiased;
     scroll-behavior: smooth;
   }
+  /* Global horizontal-overflow guard: a single wide element (a code block,
+     table, or fixed-width widget) must never widen the page — that is what
+     made the footer render "half cut off" on small screens. `clip` (unlike
+     `hidden`) doesn't create a scroll container, so sticky/fixed stay intact. */
+  html,
+  body {
+    overflow-x: clip;
+  }
   body {
     @apply font-body text-[15px] leading-[1.65] tracking-[-0.01em];
   }
@@ -44,6 +52,10 @@
   /* Reader prose — hosted chapter markdown (Phase 20) */
   .reader-prose {
     @apply leading-[1.75] text-ink;
+    /* Long tokens (URLs, hashes, identifiers) must wrap, never widen the page —
+       this is what made the footer look cut off on small screens. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .reader-prose > * + * {
     @apply mt-4;
@@ -100,6 +112,11 @@
   .reader-prose table {
     @apply w-full border-collapse text-sm;
   }
+  /* Wide tables scroll inside the prose instead of stretching the page. */
+  .reader-prose table {
+    display: block;
+    overflow-x: auto;
+  }
   .reader-prose th,
   .reader-prose td {
     @apply border border-line px-3 py-2 text-left;
@@ -133,6 +150,92 @@
   /* In-chapter search highlights (Phase 20) */
   .reader-highlight {
     @apply rounded bg-lime px-0.5 text-ink;
+  }
+
+  /* Fullscreen reader (Phase 20): the fullscreened element becomes its own
+     viewport in the browser's top layer, so nothing outside it — including the
+     window scroll — can move. The reader root must therefore scroll itself. */
+  .reader-root:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: #f8f7f4;
+  }
+  .reader-root:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: #f8f7f4;
+  }
+
+  /* Reader sidebar scroll container (Phase 21): thin, unobtrusive scrollbar
+     that only appears while hovering/scrolling the panel column. */
+  .reader-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line, #e8e6e1) transparent;
+  }
+  .reader-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .reader-sidebar::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: #d4d2cc;
+  }
+  .reader-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Book card — mirrors hack design/index.html (catalog mockup) */
+  .book-card {
+    @apply relative flex cursor-pointer flex-col rounded-[15px] border border-line bg-paper p-3.5 transition-all duration-300;
+  }
+  .book-card:hover {
+    @apply -translate-y-1 border-accent shadow-md;
+  }
+  .book-cover-wrap {
+    @apply relative mb-4 aspect-[3/4] overflow-hidden rounded-[9px] bg-warm;
+  }
+  .book-cover-img {
+    @apply h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045];
+  }
+  .book-cat {
+    @apply mb-1.5 inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.07em] text-accent-dark;
+  }
+  .book-title {
+    @apply mb-1 font-display text-[15px] font-bold leading-[1.28] tracking-[-0.02em] text-ink transition-colors;
+  }
+  .book-card:hover .book-title {
+    @apply text-accent-dark;
+  }
+  .book-author {
+    @apply mb-2.5 truncate text-[12.5px] text-muted;
+  }
+  .book-rating {
+    @apply mb-3 flex items-center gap-1.5 text-[11.5px];
+  }
+  .book-bottom {
+    @apply mt-auto flex items-center justify-between border-t border-line pt-3;
+  }
+  .book-level {
+    @apply text-[13.5px] font-bold tracking-[-0.02em];
+  }
+  .book-level.beginner {
+    @apply text-accent-dark;
+  }
+  .book-level.intermediate {
+    @apply text-teal;
+  }
+  .book-level.advanced {
+    @apply text-forest;
+  }
+  .book-read-btn {
+    @apply flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-accent-soft text-accent-dark transition-colors hover:bg-accent hover:text-white;
+  }
+  .book-fav {
+    @apply absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-[12px] text-muted opacity-0 shadow-sm transition-all duration-200 -translate-y-1 group-hover:translate-y-0 group-hover:opacity-100;
+  }
+  .book-fav:hover {
+    @apply text-danger;
   }
 }
 

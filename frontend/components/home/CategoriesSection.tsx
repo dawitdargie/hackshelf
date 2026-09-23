@@ -10,54 +10,68 @@ interface CategoryVisual {
   tile: string;
 }
 
+// Hacking-feel line icons (18×18, 1.5 stroke — matches the site's icon style):
+// terminal, bug, packet-sniffing Wi-Fi, padlock, code brackets, recon crosshair.
 const CATEGORY_VISUALS: CategoryVisual[] = [
   {
+    // Terminal / shell — the hacker's home turf
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-        <circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M2.5 9h13M9 2.5c-4.5 4-4.5 9 0 13 4.5-4 4.5-9 0-13Z" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="1.5" y="2.5" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M4.5 6.5 7 9l-2.5 2.5M9 12h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     tile: "bg-teal-soft text-teal",
   },
   {
+    // Bug — malware / vulnerability research
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-        <rect x="1.5" y="1.5" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="10.5" y="12.5" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="10.5" y="1.5" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M4.5 5.5v5a2 2 0 0 0 2 2h4M13.5 10.5v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="6" y="5.5" width="6" height="8.5" rx="3" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M6 8H2.5M6 11H3M12 8h3.5M12 11h3M7 5 5.5 2.5M11 5l1.5-2.5M9 5.5V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
     tile: "bg-violet-soft text-violet",
   },
   {
+    // Wi-Fi — network / packet sniffing
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-        <rect x="3.5" y="8" width="11" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M6 8V5.5a3 3 0 0 1 6 0V8" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M2 7a10 10 0 0 1 14 0M4.5 9.8a6.5 6.5 0 0 1 9 0M7 12.5a3 3 0 0 1 4 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="9" cy="15" r="1.2" fill="currentColor" />
       </svg>
     ),
     tile: "bg-accent-soft text-accent-dark",
   },
   {
+    // Padlock — crypto / access control
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-        <rect x="4.5" y="5.5" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 5.5V3.5M2.5 8h2M13.5 8h2M2.5 11h2M13.5 11h2M7.5 5.5v-2M10.5 5.5v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M6.5 9.5h5M6.5 11.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <rect x="4" y="8" width="10" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M6.2 8V5.8a2.8 2.8 0 0 1 5.6 0V8M9 11v1.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
     tile: "bg-amber-soft text-amber",
   },
   {
+    // Code brackets — exploits / source code
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-        <path d="M9 2.5c3 2.5 6 4.8 6 8A6 6 0 0 1 3 10.5c0-3.2 3-5.5 6-8Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M9 6v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M6 5 2.5 9 6 13M12 5l3.5 4-3.5 4M10.2 3.5 7.8 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     tile: "bg-rose-soft text-rose",
+  },
+  {
+    // Crosshair — recon / OSINT targeting
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+        <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="9" cy="9" r="1.5" fill="currentColor" />
+        <path d="M9 1.5v3M9 13.5v3M1.5 9h3M13.5 9h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+    tile: "bg-forest-soft text-forest",
   },
 ];
 

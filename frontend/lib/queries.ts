@@ -10,7 +10,6 @@ import type {
   BookSummary,
   Category,
   Level,
-  Paginated,
   Topic,
   LevelDetail,
   CategoryDetail,
@@ -19,7 +18,7 @@ import type {
 } from "@/types";
 
 export function fetchBookList(filters: BookListFilters = {}) {
-  return api.get<Paginated<BookSummary>>("/books", { ...filters });
+  return api.getPaged<BookSummary>("/books", { ...filters });
 }
 
 export function fetchLevels() {
@@ -27,15 +26,15 @@ export function fetchLevels() {
 }
 
 export function fetchCategories(params: { page?: number; limit?: number } = {}) {
-  return api.get<Paginated<Category>>("/categories", params);
+  return api.getPaged<Category>("/categories", params);
 }
 
 export function fetchTopics(params: { page?: number; limit?: number } = {}) {
-  return api.get<Paginated<Topic>>("/topics", params);
+  return api.getPaged<Topic>("/topics", params);
 }
 
 export function fetchAuthors(params: { page?: number; limit?: number } = {}) {
-  return api.get<Paginated<Author>>("/authors", params);
+  return api.getPaged<Author>("/authors", params);
 }
 
 export function fetchBookBySlug(slug: string) {

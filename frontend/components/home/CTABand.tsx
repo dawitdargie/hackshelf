@@ -12,7 +12,7 @@ export function CTABand() {
           Open the shelf and <span className="text-lime">start reading</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/60">
-          Every book on HackShelf is free and legally hosted — open source, CC,
+          Every book on HackShelf is free and legally hosted: open source, CC,
           or public domain. Read it right in your browser.
         </p>
         <Link

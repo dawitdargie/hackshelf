@@ -59,14 +59,17 @@ const DESCRIPTIONS: Record<string, string> = {
 export async function LevelsSection() {
   const levels = await fetchLevels().catch(() => []);
 
-  // Per-level book counts via the filtered list endpoint (1-item pages).
-  const counts = await Promise.all(
-    levels.map((level) =>
-      fetchBookList({ level: level.slug, limit: 1 })
-        .then((res) => res.meta.total)
-        .catch(() => null),
-    ),
-  );
+  // Counts come with /levels. Only fall back to per-level list queries when the
+  // API predates the book_count field (one request per level otherwise).
+  const counts = levels.every((level) => typeof level.book_count === "number")
+    ? levels.map((level) => level.book_count as number)
+    : await Promise.all(
+        levels.map((level) =>
+          fetchBookList({ level: level.slug, limit: 1 })
+            .then((res) => res.meta.total)
+            .catch(() => null),
+        ),
+      );
 
   return (
     <section className="mx-auto max-w-[1440px] px-5 py-10 md:px-10">

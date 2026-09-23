@@ -2,6 +2,7 @@ import { BookCard } from "@/components/ui/BookCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHead } from "./SectionHead";
 import { fetchBookList } from "@/lib/queries";
+import { getCoverAssignments } from "@/lib/coverCategory";
 import type { BookListFilters } from "@/types";
 
 // HackShelf — books rail section (Phase 14). Server component: fetches a
@@ -24,6 +25,7 @@ export async function BooksSection({
 }) {
   const list = await fetchBookList(filters).catch(() => null);
   const books = list?.data ?? [];
+  const coverCategories = await getCoverAssignments();
 
   return (
     <section className="mx-auto max-w-[1440px] px-5 py-10 md:px-10">
@@ -36,7 +38,7 @@ export async function BooksSection({
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {books.map((book) => (
-            <BookCard key={book.id} book={book} />
+            <BookCard key={book.id} book={book} coverCategory={coverCategories[book.id] ?? null} />
           ))}
         </div>
       )}

@@ -7,6 +7,7 @@ import { BookCard } from "@/components/ui/BookCard";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Pagination } from "@/components/ui/Pagination";
+import { useCoverCategoryMap } from "@/hooks/useCoverCategories";
 import type { BookSummary, Paginated } from "@/types";
 
 export function ResultsGrid({
@@ -24,6 +25,10 @@ export function ResultsGrid({
   page: number;
   onClearFilters: () => void;
 }) {
+  // Cover category: the least-populated category of each book (see
+  // lib/coverCategory). Empty while loading; cards fall back to the primary.
+  const coverCategories = useCoverCategoryMap();
+
   if (isLoading && !result) {
     return (
       <div>
@@ -59,7 +64,7 @@ export function ResultsGrid({
     <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {books.map((book) => (
-          <BookCard key={book.id} book={book} />
+          <BookCard key={book.id} book={book} coverCategory={coverCategories[book.id] ?? null} />
         ))}
       </div>
       {meta && (

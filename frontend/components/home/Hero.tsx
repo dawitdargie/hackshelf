@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[560px] items-center bg-[url('/hackbg.avif')] bg-cover bg-center bg-no-repeat md:min-h-[600px] lg:min-h-[680px]">
+    <section className="relative -mt-[68px] flex min-h-[560px] items-center bg-[url('/hackbg.avif')] bg-cover bg-center bg-no-repeat md:min-h-[600px] lg:min-h-[680px]">
       {/* 105deg dark overlay — dark left → lighter right (mockup .hero::before) */}
       <div
         aria-hidden

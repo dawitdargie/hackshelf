@@ -7,6 +7,8 @@ export interface Level {
   id: number;
   name: string;
   slug: string;
+  /** Present on /levels (and level detail); omitted inside book summaries. */
+  book_count?: number;
 }
 
 export interface Author {
@@ -19,6 +21,9 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  description: string;
+  /** Present on /categories (and category detail); omitted inside book summaries. */
+  book_count?: number;
 }
 
 export interface Topic {
@@ -62,6 +67,8 @@ export interface BookSummary {
   slug: string;
   cover_url: string;
   level: Level;
+  /** Primary category for the card's category tag (empty when unclassified). */
+  category: Category;
   rating: RatingSummary;
 }
 
@@ -186,6 +193,10 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  role?: "user" | "admin";
+  /** Editable profile fields (PATCH /me). Email is read-only. */
+  display_name?: string;
+  bio?: string;
   created_at?: string;
   updated_at?: string;
 }

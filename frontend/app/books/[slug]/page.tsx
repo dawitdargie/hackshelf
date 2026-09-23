@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { BookInfo } from "@/components/book/BookInfo";
 import { BookActions } from "@/components/book/BookActions";
 import { RelatedBooks } from "@/components/book/RelatedBooks";
@@ -13,13 +14,17 @@ interface Props {
   params: { slug: string };
 }
 
-async function getBook(slug: string) {
+// cache() dedupes generateMetadata and the page body onto one fetch per request.
+const getBook = cache(async (slug: string) => {
   try {
     return await fetchBookBySlug(slug);
-  } catch {
+  } catch (error) {
+    // Surface the real cause (e.g. wrong API URL / API down) — a silent
+    // notFound() here makes "book not displaying" undiagnosable.
+    console.error(`[book page] failed to load book "${slug}":`, error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const book = await getBook(params.slug);

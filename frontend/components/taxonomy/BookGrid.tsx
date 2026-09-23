@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { BookCard } from "@/components/ui/BookCard";
+import { getCoverAssignments } from "@/lib/coverCategory";
 import type { BookSummary } from "@/types";
 
 // HackShelf — taxonomy book grid (Phase 17). Server component: BookCard
 // grid with an empty state; links back into the filtered catalog.
 
-export function BookGrid({
+export async function BookGrid({
   books,
   emptyLabel,
   catalogHref,
@@ -14,6 +15,8 @@ export function BookGrid({
   emptyLabel: string;
   catalogHref?: string;
 }) {
+  const coverCategories = await getCoverAssignments();
+
   if (books.length === 0) {
     return (
       <div className="paper-card px-6 py-16 text-center">
@@ -33,7 +36,7 @@ export function BookGrid({
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {books.map((book) => (
-        <BookCard key={book.id} book={book} />
+        <BookCard key={book.id} book={book} coverCategory={coverCategories[book.id] ?? null} />
       ))}
     </div>
   );

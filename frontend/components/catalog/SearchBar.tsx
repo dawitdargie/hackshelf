@@ -12,7 +12,7 @@ const DEBOUNCE_MS = 350;
 
 export function SearchBar({
   initialQuery = "",
-  placeholder = "Search books, topics, authors…",
+  placeholder = "Search books",
 }: {
   initialQuery?: string;
   placeholder?: string;

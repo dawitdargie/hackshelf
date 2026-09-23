@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!level) return { title: "Level not found" };
   return {
     title: `${level.name} Books`,
-    description: `Browse ${level.name.toLowerCase()}-level hacking and cybersecurity books — free and legally hosted on HackShelf.`,
+    description: `Browse ${level.name.toLowerCase()}-level hacking and cybersecurity books, free and legally hosted on HackShelf.`,
     alternates: { canonical: `/levels/${level.slug}` },
     openGraph: {
       title: `${level.name} Books · HackShelf`,

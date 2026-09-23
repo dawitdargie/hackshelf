@@ -2,26 +2,31 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Hero } from "@/components/home/Hero";
 import { BooksSection } from "@/components/home/BooksSection";
+import { ContinueReadingSection } from "@/components/home/ContinueReadingSection";
+import { YourShelfSection } from "@/components/home/YourShelfSection";
 import { LevelsSection } from "@/components/home/LevelsSection";
 import { CategoriesSection } from "@/components/home/CategoriesSection";
 import { CTABand } from "@/components/home/CTABand";
 import { LoadingState } from "@/components/ui/LoadingState";
 
-// HackShelf — homepage (Phase 14). Server-rendered for SEO: every section
-// fetches the real catalog via the Phase 13 fetch functions and streams in
-// through Suspense, with graceful loading/empty states.
+// HackShelf — homepage (Phase 14 + Phase 21).
+// Server-rendered for SEO: every catalog section fetches the real catalog via
+// the Phase 13 fetch functions and streams in through Suspense. The Continue
+// Reading and Your Shelf sections are client components that render nothing for
+// unauthenticated visitors (and only activate once auth is resolved).
 
 // Always render on the server at request time (public catalog pages are SSR).
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "HackShelf — Free Hacking Books, Read in Browser",
+  title: "HackShelf: Hacking Books, Read in Browser",
   description:
-    "A curated collection of 100% free, legally hosted hacking and cybersecurity books. Search the catalog, browse by level and category, and read in your browser — no paywalls, no PDF hunting.",
+    "A curated collection of legally hosted hacking and cybersecurity books. Search the catalog, browse by level and category, and read in your browser. No paywalls, no PDF hunting.",
   openGraph: {
-    title: "HackShelf — Free Hacking Books, Read in Browser",
+    title: "HackShelf: Free Hacking Books, Read in Browser",
     description:
-      "A curated collection of 100% free, legally hosted hacking and cybersecurity books. Read in your browser, track your progress.",
+      "A curated collection of legally hosted hacking and cybersecurity books. Read in your browser, track your progress.",
     type: "website",
     siteName: "HackShelf",
   },
@@ -40,6 +45,9 @@ export default function HomePage() {
     <>
       {/* Hero — dark hackbg.avif image, lime accents (mockup) */}
       <Hero />
+
+      {/* Continue reading — authenticated only; renders nothing when logged out */}
+      <ContinueReadingSection />
 
       {/* Popular / highly rated */}
       <Suspense fallback={<SectionFallback />}>
@@ -65,6 +73,9 @@ export default function HomePage() {
           />
         </Suspense>
       </div>
+
+      {/* Your shelf — authenticated only; renders nothing when logged out or empty */}
+      <YourShelfSection />
 
       {/* Levels */}
       <Suspense fallback={<SectionFallback />}>

@@ -9,7 +9,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 export const metadata: Metadata = {
   title: "Browse Books",
   description:
-    "Search and filter the HackShelf catalog — free, legally hosted hacking and cybersecurity books by level, category, topic, and rating.",
+    "Search and filter the HackShelf catalog. Free, legally hosted hacking and cybersecurity books by level, category, topic, and rating.",
   openGraph: {
     title: "Browse Books · HackShelf",
     description:
