@@ -32,6 +32,18 @@ func (r *RatingRepository) Upsert(ctx context.Context, userID, bookID string, ra
 	return nil
 }
 
+// Get returns the user's rating for a book, or pgx.ErrNoRows when unrated.
+func (r *RatingRepository) Get(ctx context.Context, userID, bookID string) (int, error) {
+	var rating int
+	err := r.pool.QueryRow(ctx,
+		`SELECT rating FROM ratings WHERE user_id = $1 AND book_id = $2`, userID, bookID,
+	).Scan(&rating)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get rating: %w", err)
+	}
+	return rating, nil
+}
+
 // Delete removes the user's rating for a book. Returns false if no rating
 // existed (delete is idempotent — callers still respond 204).
 func (r *RatingRepository) Delete(ctx context.Context, userID, bookID string) (bool, error) {

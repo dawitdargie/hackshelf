@@ -9,14 +9,14 @@ import (
 // ordered by publication/created date. Single round trip per call.
 func (r *BookRepository) listSummariesByTaxon(ctx context.Context, existsClause, slug string) ([]BookSummary, error) {
 	query := fmt.Sprintf(`
-		SELECT b.id, b.title, b.slug, COALESCE(b.cover_url, ''),
-		       l.id, l.name, l.slug,
-		       rat.avg_rating, rat.rating_count
+		SELECT %s
 		FROM books b
 		JOIN levels l ON l.id = b.level_id
 		%s
+		%s
 		WHERE %s
-		ORDER BY %s`, RatingSummarySelect, existsClause, newestClause)
+		ORDER BY %s`,
+		summarySelectColumns, CategorySummarySelect, RatingSummarySelect, existsClause, newestClause)
 
 	rows, err := r.pool.Query(ctx, query, slug)
 	if err != nil {
@@ -27,11 +27,7 @@ func (r *BookRepository) listSummariesByTaxon(ctx context.Context, existsClause,
 	var summaries []BookSummary
 	for rows.Next() {
 		var s BookSummary
-		if err := rows.Scan(
-			&s.ID, &s.Title, &s.Slug, &s.CoverURL,
-			&s.Level.ID, &s.Level.Name, &s.Level.Slug,
-			&s.Rating.Average, &s.Rating.Count,
-		); err != nil {
+		if err := rows.Scan(scanBookSummary(&s)...); err != nil {
 			return nil, fmt.Errorf("failed to scan book summary: %w", err)
 		}
 		summaries = append(summaries, s)

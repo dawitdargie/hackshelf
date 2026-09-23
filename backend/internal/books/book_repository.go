@@ -30,6 +30,36 @@ const RatingSummarySelect = `
 		WHERE r.book_id = b.id
 	) rat ON true`
 
+// CategorySummarySelect joins the book's primary (alphabetically first)
+// category via LATERAL so cards can show a category tag in one round trip.
+const CategorySummarySelect = `
+	LEFT JOIN LATERAL (
+		SELECT c.id, c.name, c.slug
+		FROM book_categories bc
+		JOIN categories c ON c.id = bc.category_id
+		WHERE bc.book_id = b.id
+		ORDER BY c.name
+		LIMIT 1
+	) cat ON true`
+
+// summarySelectColumns lists the BookSummary columns shared by all summary
+// queries (level + primary category + rating aggregate).
+const summarySelectColumns = `
+	b.id, b.title, b.slug, COALESCE(b.cover_url, '') AS cover_url,
+	l.id AS level_id, l.name AS level_name, l.slug AS level_slug,
+	cat.id AS category_id, COALESCE(cat.name, '') AS category_name, COALESCE(cat.slug, '') AS category_slug,
+	rat.avg_rating, rat.rating_count`
+
+// scanBookSummary scans one BookSummary row.
+func scanBookSummary(s *BookSummary) []interface{} {
+	return []interface{}{
+		&s.ID, &s.Title, &s.Slug, &s.CoverURL,
+		&s.Level.ID, &s.Level.Name, &s.Level.Slug,
+		&s.Category.ID, &s.Category.Name, &s.Category.Slug,
+		&s.Rating.Average, &s.Rating.Count,
+	}
+}
+
 // SortOption is a whitelisted sort ordering. Order-by SQL lives here, never
 // in user input.
 type SortOption string
@@ -79,11 +109,10 @@ func (r *BookRepository) List(ctx context.Context, q BookQuery) ([]BookSummary, 
 
 	if s := strings.TrimSpace(q.Search); s != "" {
 		ph := arg(s)
-		// Match title/description via full-text + ILIKE, and author names
-		// via EXISTS (uses idx_book_authors_author_id / PK index).
+		// Match title/description via full-text + ILIKE.
 		where = append(where, fmt.Sprintf(
-			"(b.search_vec @@ plainto_tsquery('english', %s) OR b.title ILIKE '%%'||%s||'%%' OR b.description ILIKE '%%'||%s||'%%' OR EXISTS (SELECT 1 FROM book_authors ba JOIN authors a ON a.id = ba.author_id WHERE ba.book_id = b.id AND a.name ILIKE '%%'||%s||'%%'))",
-			ph, ph, ph, ph))
+			"(b.search_vec @@ plainto_tsquery('english', %s) OR b.title ILIKE '%%'||%s||'%%' OR b.description ILIKE '%%'||%s||'%%')",
+			ph, ph, ph))
 	}
 	if q.LevelSlug != "" {
 		where = append(where, "l.slug = "+arg(q.LevelSlug))
@@ -110,17 +139,16 @@ func (r *BookRepository) List(ctx context.Context, q BookQuery) ([]BookSummary, 
 	// The window count is computed before LIMIT, so it reflects the full
 	// filtered set while the WHERE text appears only once.
 	query := fmt.Sprintf(`
-		SELECT b.id, b.title, b.slug, COALESCE(b.cover_url, '') AS cover_url,
-		       l.id AS level_id, l.name AS level_name, l.slug AS level_slug,
-		       rat.avg_rating, rat.rating_count,
+		SELECT %s,
 		       COUNT(*) OVER () AS total
 		FROM books b
 		JOIN levels l ON l.id = b.level_id
 		%s
+		%s
 		WHERE %s
 		ORDER BY %s
 		LIMIT %d OFFSET %d`,
-		RatingSummarySelect, whereSQL, orderBy, q.Limit, offset)
+		summarySelectColumns, CategorySummarySelect, RatingSummarySelect, whereSQL, orderBy, q.Limit, offset)
 
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -132,12 +160,7 @@ func (r *BookRepository) List(ctx context.Context, q BookQuery) ([]BookSummary, 
 	total := 0
 	for rows.Next() {
 		var s BookSummary
-		if err := rows.Scan(
-			&s.ID, &s.Title, &s.Slug, &s.CoverURL,
-			&s.Level.ID, &s.Level.Name, &s.Level.Slug,
-			&s.Rating.Average, &s.Rating.Count,
-			&total, // COUNT(*) OVER () — full filtered count
-		); err != nil {
+		if err := rows.Scan(append(scanBookSummary(&s), &total)...); err != nil {
 			return nil, 0, fmt.Errorf("failed to scan book summary: %w", err)
 		}
 		summaries = append(summaries, s)

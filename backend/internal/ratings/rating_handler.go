@@ -2,7 +2,10 @@ package ratings
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/jackc/pgx/v5"
 
 	"hackshelf/backend/internal/auth"
 	"hackshelf/backend/internal/books"
@@ -66,6 +69,34 @@ func (h *RatingHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Get handles GET /api/v1/books/{bookId}/rating (auth required).
+// Returns {"data": {"rating": n}} or 404 RATING_NOT_FOUND when unrated.
+func (h *RatingHandler) Get(w http.ResponseWriter, r *http.Request) {
+	userID := auth.UserIDFromContext(r.Context())
+
+	bookID := r.PathValue("bookId")
+	if appErr := h.bookService.ValidateBookID(r.Context(), bookID); appErr != nil {
+		writeAppError(w, appErr)
+		return
+	}
+
+	rating, err := h.repo.Get(r.Context(), userID, bookID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeAppError(w, middleware.NewAppError(
+				http.StatusNotFound, "RATING_NOT_FOUND", "You haven't rated this book"))
+			return
+		}
+		writeAppError(w, middleware.NewAppError(
+			http.StatusInternalServerError, "INTERNAL_ERROR", "Something went wrong"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{"data": map[string]int{"rating": rating}})
 }
 
 // Delete handles DELETE /api/v1/books/{bookId}/rating (auth required).

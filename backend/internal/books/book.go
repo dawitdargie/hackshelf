@@ -35,12 +35,15 @@ type RatingSummary struct {
 }
 
 // BookSummary is the list-view representation of a book (API spec §10).
+// Category is the book's primary (alphabetically first) category, used by
+// book cards for the category tag; it is empty when the book has none.
 type BookSummary struct {
 	ID       string        `json:"id"`
 	Title    string        `json:"title"`
 	Slug     string        `json:"slug"`
 	CoverURL string        `json:"cover_url"`
 	Level    Level         `json:"level"`
+	Category Category      `json:"category"`
 	Rating   RatingSummary `json:"rating"`
 }
 
