@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 
 const NAV = [
+  { href: "/", label: "Home" },
   { href: "/books", label: "Books" },
   { href: "/levels", label: "Levels" },
   { href: "/categories", label: "Categories" },

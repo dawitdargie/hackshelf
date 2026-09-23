@@ -203,6 +203,15 @@ cd backend
 DATABASE_URL="neon-pooled-url" go run ./cmd/migrate
 ```
 
+### Password-reset emails in production
+
+Render blocks outbound SMTP ports, so production uses Brevo's **HTTPS API** instead:
+
+1. Create a free account at [brevo.com](https://brevo.com), add and verify a **sender** (Senders, Domains and Dedicated IPs), then generate an **API key** (SMTP and API page).
+2. On Render, set `EMAIL_MODE=api`, `BREVO_API_KEY=<your key>`, `BREVO_FROM_NAME=HackShelf`, and `SMTP_FROM=<your verified sender address>` (the API sender reuses it as the From/Reply-To address).
+
+In `EMAIL_MODE=dev` (the default), reset links are only printed to the server log. The legacy `EMAIL_MODE=smtp` still works on hosts that allow outbound SMTP, but not on Render.
+
 ### 3. Frontend: Vercel
 
 Import the repository at [vercel.com](https://vercel.com), set the root directory to `frontend`, and add these environment variables **before** the first build (`NEXT_PUBLIC_API_URL` is inlined at build time):
