@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Beginner",
+    "slug": "beginner",
+    "description": "Foundational concepts: how attacks work, what defenders protect, and the vocabulary of the field.",
+    "sort_order": 1
+  },
+  {
+    "id": 2,
+    "name": "Intermediate",
+    "slug": "intermediate",
+    "description": "Core techniques every hacker needs: recon, testing methodologies and the web security workflow.",
+    "sort_order": 2
+  },
+  {
+    "id": 3,
+    "name": "Advanced",
+    "slug": "advanced",
+    "description": "Specialist and deep-dive material: exploitation, verification standards and offensive tooling.",
+    "sort_order": 3
+  }
+]

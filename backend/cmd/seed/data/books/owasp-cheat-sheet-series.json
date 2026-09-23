@@ -1,0 +1,11 @@
+{
+  "title": "OWASP Cheat Sheet Series",
+  "slug": "owasp-cheat-sheet-series",
+  "description": "The OWASP Cheat Sheet Series is a curated collection of concise, practical guidance for developers and defenders. Each cheat sheet condenses a single security topic — such as authentication, authorization or attack surface analysis — into actionable recommendations that can be applied directly to a codebase.",
+  "level": "advanced",
+  "authors": ["owasp-foundation"],
+  "categories": ["secure-coding", "application-security"],
+  "topics": ["authentication", "authorization", "attack-surface"],
+  "source_url": "https://github.com/OWASP/CheatSheetSeries",
+  "license": "CC BY-SA 4.0"
+}

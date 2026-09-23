@@ -1,0 +1,10 @@
+[
+  { "name": "Web Security", "slug": "web-security", "description": "Securing web applications and their supporting infrastructure." },
+  { "name": "Application Security", "slug": "application-security", "description": "Building, testing and verifying secure software." },
+  { "name": "Secure Coding", "slug": "secure-coding", "description": "Practical guidance for writing code that resists attack." },
+  { "name": "Mobile Security", "slug": "mobile-security", "description": "Assessing Android and iOS applications." },
+  { "name": "API Security", "slug": "api-security", "description": "Testing and hardening REST and GraphQL APIs." },
+  { "name": "Cloud Security", "slug": "cloud-security", "description": "Identity, configuration and workload security in the cloud." },
+  { "name": "DevSecOps", "slug": "devsecops", "description": "Integrating security into build and deployment pipelines." },
+  { "name": "Network Security", "slug": "network-security", "description": "Protocols, infrastructure and network-level attacks." }
+]

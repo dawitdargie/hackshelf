@@ -1,0 +1,12 @@
+[
+  { "name": "Information Gathering", "slug": "information-gathering" },
+  { "name": "Reconnaissance", "slug": "reconnaissance" },
+  { "name": "Web Testing", "slug": "web-testing" },
+  { "name": "Input Validation", "slug": "input-validation" },
+  { "name": "Injection", "slug": "injection" },
+  { "name": "Authentication", "slug": "authentication" },
+  { "name": "Authorization", "slug": "authorization" },
+  { "name": "Access Control", "slug": "access-control" },
+  { "name": "Secure Development", "slug": "secure-development" },
+  { "name": "Attack Surface", "slug": "attack-surface" }
+]

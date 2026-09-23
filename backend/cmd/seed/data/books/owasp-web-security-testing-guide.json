@@ -1,0 +1,11 @@
+{
+  "title": "OWASP Web Security Testing Guide",
+  "slug": "owasp-web-security-testing-guide",
+  "description": "The OWASP Web Security Testing Guide (WSTG) is the reference framework for assessing the security of web applications. It lays out the tests, methodologies and reporting guidance used by penetration testers, covering everything from information gathering and configuration testing through to authentication, authorization, business logic and client-side testing.",
+  "level": "advanced",
+  "authors": ["owasp-foundation"],
+  "categories": ["web-security", "application-security"],
+  "topics": ["information-gathering", "reconnaissance", "web-testing"],
+  "source_url": "https://github.com/OWASP/wstg",
+  "license": "CC BY-SA 4.0"
+}

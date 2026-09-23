@@ -1,0 +1,11 @@
+{
+  "title": "OWASP Top 10:2021",
+  "slug": "owasp-top-10-2021",
+  "description": "The OWASP Top 10 is the widely referenced document on the most critical security risks to web applications. The 2021 edition ranks categories such as broken access control, cryptographic failures and injection, and explains how each risk manifests, how it is exploited in practice, and the controls that prevent it.",
+  "level": "beginner",
+  "authors": ["owasp-foundation"],
+  "categories": ["web-security", "application-security"],
+  "topics": ["access-control", "injection", "secure-development"],
+  "source_url": "https://github.com/OWASP/Top10",
+  "license": "CC BY-SA 4.0"
+}

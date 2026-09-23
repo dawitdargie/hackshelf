@@ -1,0 +1,11 @@
+{
+  "title": "OWASP Application Security Verification Standard",
+  "slug": "owasp-asvs",
+  "description": "The OWASP Application Security Verification Standard (ASVS) defines the requirements and verification levels used to assess the security of modern web applications and APIs. Version 5.0 organises its controls into chapters such as encoding and sanitization, validation and business logic, authentication, and file handling, and is designed to be usable as a specification, a testing guide or a procurement checklist.",
+  "level": "intermediate",
+  "authors": ["owasp-foundation"],
+  "categories": ["application-security", "secure-coding"],
+  "topics": ["authentication", "input-validation", "secure-development"],
+  "source_url": "https://github.com/OWASP/ASVS",
+  "license": "CC BY-SA 4.0"
+}
