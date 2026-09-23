@@ -4,6 +4,21 @@ A curated, free online bookstore for hackers, penetration testers and applicatio
 
 HackShelf catalogs only books that may legally be redistributed and hosts their full content in the system, so every book in the catalog can be read from first page to last inside the app. No trials, no paywalls, no external "read here" links.
 
+## Live deployment
+
+HackShelf is live at **https://hackshelf.vercel.app**.
+Every push to `main` ships it automatically. No manual steps, no stale versions.
+
+What you get the moment you open it:
+
+- **Complete books, in the browser.** Every cataloged book is hosted here in full: chapters, table of contents, and clean reading pages. No paywalls, no PDF hunting, no external "read here" links.
+- **Search that finds things.** Full-text and fuzzy search, plus filters by level, category, topic and minimum rating, and sorting by newest, rating or most rated.
+- **A personal library.** Save books, continue exactly where you stopped, and pick up on any device, because reading progress lives server-side.
+- **Bookmarks and in-reader search.** Mark any spot in any chapter and find text inside the book you are reading.
+- **Ratings and reviews.** Rate from 1 to 5 stars, write and edit reviews, and see what other readers think.
+- **A secure account.** Passwords stored only as hashes, access tokens kept out of browser storage, refresh tokens rotated on every use, and rate limiting on every auth endpoint.
+- **An admin panel.** Role-gated catalog management at `/admin`: create and edit books and chapters, live Markdown preview, taxonomy management, and safe deletes with confirmation.
+
 ## What you can do with HackShelf
 
 ### Read complete books in the browser
@@ -34,6 +49,8 @@ HackShelf catalogs only books that may legally be redistributed and hosts their 
 - Rate books from 1 to 5 stars
 - Write a review, edit it, or delete it
 - See average ratings and other readers' reviews on every book page
+
+> **Note on login and password reset:** for security reasons these flows never reveal whether an account exists. An unknown email and a wrong password return the same generic message, and password reset replies identically whether or not the address is registered. This is an intentional safeguard: revealing which emails have accounts would let attackers target real users, so the API stays deliberately quiet.
 
 ### Manage the catalog as an admin
 
