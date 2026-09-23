@@ -25,7 +25,9 @@ type Config struct {
 	TrustProxy       bool          // Trust X-Forwarded-For header (only when behind a known proxy)
 
 	// Email delivery configuration.
-	EmailMode   string // "dev" (log to stdout) or "smtp" (send via SMTP)
+	EmailMode   string // "dev" (log to stdout), "smtp" (send via SMTP), or "api" (Brevo HTTPS API)
+	BrevoAPIKey string // Brevo API key for EMAIL_MODE=api
+	BrevoFromName string // Display name for emails sent via EMAIL_MODE=api
 	SMTPHost    string
 	SMTPPort    int
 	SMTPUser    string
@@ -47,6 +49,8 @@ func Load() (*Config, error) {
 		FrontendURL:        os.Getenv("FRONTEND_URL"),
 		Port:               os.Getenv("PORT"),
 		EmailMode:          os.Getenv("EMAIL_MODE"),
+		BrevoAPIKey:        os.Getenv("BREVO_API_KEY"),
+		BrevoFromName:      os.Getenv("BREVO_FROM_NAME"),
 		SMTPHost:           os.Getenv("SMTP_HOST"),
 		SMTPUser:           os.Getenv("SMTP_USER"),
 		SMTPPass:           os.Getenv("SMTP_PASS"),

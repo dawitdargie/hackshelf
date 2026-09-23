@@ -3,6 +3,8 @@
 # Secret values are entered in the Render dashboard (sync: false);
 # JWT secrets are generated automatically.
 #
+# Email: Render blocks outbound SMTP ports, so production uses
+# EMAIL_MODE=api (Brevo HTTPS API) with BREVO_API_KEY set in the dashboard.
 # The frontend is served by Vercel (see README, Deployment section).
 # Note: pre-deploy commands are not available on the free plan, so migrations
 # are applied manually from a machine with Go installed (see README).

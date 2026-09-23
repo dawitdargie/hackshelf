@@ -217,6 +217,17 @@ func (r *Router) handleHealth(w http.ResponseWriter, req *http.Request) {
 
 // newEmailSender returns the appropriate email sender based on configuration.
 func newEmailSender(cfg *config.Config) email.EmailSender {
+	// Brevo HTTPS API: works from hosts that block outbound SMTP ports
+	// (e.g. Render), since it uses plain HTTPS on port 443.
+	if cfg.EmailMode == "api" && cfg.BrevoAPIKey != "" {
+		log.Printf("[email] using BrevoAPISender from=%s", cfg.SMTPFrom)
+		return email.NewBrevoAPISender(
+			cfg.BrevoAPIKey,
+			cfg.SMTPFrom,
+			cfg.BrevoFromName,
+			cfg.FrontendURL,
+		)
+	}
 	if cfg.EmailMode == "smtp" && cfg.SMTPHost != "" {
 		log.Printf("[email] using SMTPSender(%s:%d) from=%s", cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom)
 		return email.NewSMTPSender(
