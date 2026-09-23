@@ -50,13 +50,15 @@ export function ContinueReadingSection() {
           <span className="section-label">Continue reading</span>
         </div>
 
-        <div className="paper-card group flex items-center gap-4 p-4 transition-shadow hover:shadow-md md:gap-5 md:p-5">
+        {/* Stacks on mobile so fixed-width cover and actions never squeeze
+            the title out; side-by-side layout from the sm breakpoint up. */}
+        <div className="paper-card group flex flex-col gap-3 p-4 transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-5 sm:p-5">
           {/* Cover + meta — clicking either opens the reader at the saved spot */}
           <Link
             href={`/read/${slug}?chapter=${item.location}`}
             className="flex min-w-0 flex-1 items-center gap-4 md:gap-5"
           >
-            <div className="aspect-[3/4] w-[88px] shrink-0 overflow-hidden rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-[1.04]">
+            <div className="aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-[1.04] sm:w-[88px]">
               <BookCover
                 slug={item.book.slug}
                 title={item.book.title}
@@ -72,16 +74,14 @@ export function ContinueReadingSection() {
               <h3 className="truncate font-display text-lg font-bold leading-snug tracking-[-0.02em] text-ink transition-colors group-hover:text-accent-dark">
                 {item.book.title}
               </h3>
-              <p className="mt-1 text-[13px] text-ink-3">
-                {Math.round(item.percentage)}% read · pick up where you left off
-              </p>
             </div>
           </Link>
 
-          {/* Progress + continue action — anchored to the right, inset from the edge */}
-          <div className="flex shrink-0 items-center gap-3 pr-1 md:gap-4 md:pr-2">
+          {/* Progress + continue action — own row on mobile, right-aligned
+              on larger screens */}
+          <div className="flex items-center justify-between gap-3 sm:shrink-0 sm:justify-normal sm:pr-2">
             <span className="meta-line shrink-0">{progress}%</span>
-            <div className="hidden h-2.5 w-[110px] overflow-hidden rounded-full bg-warm md:block">
+            <div className="h-2.5 min-w-[60px] flex-1 overflow-hidden rounded-full bg-warm sm:w-[110px] sm:flex-none">
               <div
                 className="h-full rounded-full bg-accent transition-all duration-500"
                 style={{ width: `${progress}%` }}
@@ -94,7 +94,7 @@ export function ContinueReadingSection() {
             </div>
             <Link
               href={`/read/${slug}?chapter=${item.location}`}
-              className="inline-flex h-[34px] items-center gap-1.5 rounded-lg bg-accent px-3 text-[13px] font-semibold text-white transition-colors hover:bg-accent-dark"
+              className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 text-[13px] font-semibold text-white transition-colors hover:bg-accent-dark"
             >
               <ContinueIcon />
               Continue
