@@ -29,10 +29,14 @@ export function ReaderLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div ref={containerRef} className="bg-bg pb-2">
+    <div ref={containerRef} className="reader-root bg-bg pb-2">
       <div className="mx-auto grid max-w-[1440px] gap-8 px-5 py-8 md:grid-cols-[260px_1fr] md:px-10">
-        {/* Sidebar */}
-        <aside className="md:sticky md:top-[84px] md:self-start">
+        {/* Sidebar — sticky and self-scrolling: the TOC + bookmarks together are
+            taller than the viewport, so without its own scroll the panels below
+            the fold (bookmarks form/list) would never be reachable. Bookmarks
+            come first: they're interactive; progress is passive; the usually
+            longest TOC sits last inside the scroll. */}
+        <aside className="reader-sidebar min-w-0 md:sticky md:top-[84px] md:max-h-[calc(100vh-100px)] md:self-start md:overflow-y-auto md:pr-1">
           <div className="paper-card p-4">
             <Link
               href="/books"
@@ -41,14 +45,17 @@ export function ReaderLayout({
               {bookTitle}
             </Link>
             <div className="mb-3 border-b border-line pb-3">{controls}</div>
-            <TableOfContents chapters={chapters} currentSlug={currentSlug} basePath={basePath} />
+            <div className="mt-4 hidden rounded-lg border border-line p-4 md:block">{bookmarks}</div>
+            <div className="mt-4 hidden rounded-lg border border-line p-4 md:block">{progress}</div>
+            <div className="border-t border-line pt-3">
+              <TableOfContents chapters={chapters} currentSlug={currentSlug} basePath={basePath} />
+            </div>
           </div>
-          <div className="paper-card mt-4 hidden p-4 md:block">{progress}</div>
-          <div className="paper-card mt-4 hidden p-4 md:block">{bookmarks}</div>
         </aside>
 
-        {/* Content */}
-        <div>
+        {/* Content — min-w-0 lets the grid column shrink on small screens instead
+            of being pushed wider by long unbreakable content (URLs, code, tables). */}
+        <div className="min-w-0">
           <div className="mb-4 md:hidden">{controls}</div>
           <div className="paper-card px-5 py-8 md:px-10 md:py-10">{children}</div>
           <div className="paper-card mt-4 p-4 md:hidden">{progress}</div>

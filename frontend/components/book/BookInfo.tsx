@@ -1,39 +1,33 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { RatingStars } from "@/components/ui/RatingStars";
+import { BookCover } from "@/components/ui/BookCover";
+import { getCoverAssignments } from "@/lib/coverCategory";
 import type { Book } from "@/types";
 
 // HackShelf — book info hero (Phase 16). Server component: static metadata,
 // taxonomy badges, rating summary, license/source attribution.
 
-export function BookInfo({ book }: { book: Book }) {
+export async function BookInfo({ book }: { book: Book }) {
   const published = book.publication_date
     ? new Date(book.publication_date).getFullYear()
     : null;
+  // Same least-populated assignment the card grids use, so the cover a reader
+  // saw on the catalog is the cover they see here.
+  const coverCategories = await getCoverAssignments();
+  const coverCategory = coverCategories[book.id] ?? book.categories[0] ?? null;
 
   return (
     <section className="border-b border-line bg-warm">
       <div className="mx-auto grid max-w-[1440px] gap-8 px-5 py-12 md:grid-cols-[220px_1fr] md:px-10">
         {/* Cover */}
-        <div className="paper-card relative aspect-[3/4] w-[220px] overflow-hidden">
-          {book.cover_url ? (
-            <Image
-              src={book.cover_url}
-              alt={`Cover of ${book.title}`}
-              fill
-              sizes="220px"
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 bg-accent-soft">
-              <span className="font-display text-4xl font-bold text-accent/40">&gt;_</span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-accent/50">
-                {book.level.name}
-              </span>
-            </div>
-          )}
+        <div className="mx-auto aspect-[3/4] w-[220px] max-w-full overflow-hidden paper-card relative">
+          <BookCover
+            slug={book.slug}
+            title={book.title}
+            levelName={book.level.name}
+            category={coverCategory}
+          />
         </div>
 
         {/* Metadata */}

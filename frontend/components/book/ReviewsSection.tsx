@@ -26,13 +26,13 @@ function formatDate(iso: string) {
 
 export function ReviewsSection({ bookId }: { bookId: string }) {
   const { user, status } = useAuth();
-  const reviews = useReviews(bookId, { limit: 20 });
+  const reviews = useReviews(bookId);
   const create = useCreateReview(bookId);
   const update = useUpdateReview(bookId);
   const remove = useDeleteReview(bookId);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const list = reviews.data?.data ?? [];
+  const list = reviews.data ?? [];
   const myReview = user ? list.find((r) => r.user.id === user.id) : undefined;
   const alreadyReviewed = Boolean(myReview);
 
@@ -42,7 +42,7 @@ export function ReviewsSection({ bookId }: { bookId: string }) {
         <div>
           <p className="section-label mb-2">Community</p>
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] text-ink">
-            Reviews <span className="text-muted">({reviews.data?.meta.total ?? 0})</span>
+            Reviews <span className="text-muted">({list.length})</span>
           </h2>
         </div>
       </div>
@@ -75,7 +75,7 @@ export function ReviewsSection({ bookId }: { bookId: string }) {
 
       {!reviews.isLoading && list.length === 0 && (
         <div className="paper-card px-6 py-10 text-center text-sm text-ink-3">
-          No reviews yet — be the first to share your thoughts.
+          No reviews yet. be the first to share your thoughts.
         </div>
       )}
 

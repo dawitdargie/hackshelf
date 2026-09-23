@@ -1,6 +1,7 @@
 import { SectionHead } from "@/components/home/SectionHead";
 import { BookCard } from "@/components/ui/BookCard";
 import { fetchBookList } from "@/lib/queries";
+import { getCoverAssignments } from "@/lib/coverCategory";
 import type { Book } from "@/types";
 
 // HackShelf — related books (Phase 16). Backend has no related-books
@@ -11,6 +12,7 @@ export async function RelatedBooks({ book }: { book: Book }) {
     () => null,
   );
   const related = (res?.data ?? []).filter((b) => b.id !== book.id).slice(0, 4);
+  const coverCategories = await getCoverAssignments();
 
   if (related.length === 0) return null;
 
@@ -25,7 +27,7 @@ export async function RelatedBooks({ book }: { book: Book }) {
       />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {related.map((b) => (
-          <BookCard key={b.id} book={b} />
+          <BookCard key={b.id} book={b} coverCategory={coverCategories[b.id] ?? null} />
         ))}
       </div>
     </section>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import ReaderClient from "./ReaderClient";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { fetchBookBySlug } from "@/lib/queries";
@@ -12,20 +12,22 @@ interface Props {
   params: { slug: string };
 }
 
-async function getBook(slug: string) {
+// cache() dedupes generateMetadata and the page body onto one fetch per request.
+const getBook = cache(async (slug: string) => {
   try {
     return await fetchBookBySlug(slug);
-  } catch {
+  } catch (error) {
+    console.error(`[reader] failed to load book "${slug}":`, error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const book = await getBook(params.slug);
   if (!book) return { title: "Reader" };
   return {
     title: `Read ${book.title}`,
-    description: `Read ${book.title} in your browser — free and legally hosted on HackShelf.`,
+    description: `Read ${book.title} in your browser, free and legally hosted on HackShelf.`,
     robots: { index: false }, // reading UI, not a landing page
   };
 }

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="mt-20 bg-ink text-white">
@@ -19,17 +21,18 @@ export function Footer() {
               cybersecurity books. Read in your browser, track your progress.
             </p>
           </div>
+          <div className="grid w-full grid-cols-2 gap-8 sm:grid-cols-3 md:w-auto md:max-w-sm md:grid-cols-2 lg:grid-cols-3">
           <nav className="flex flex-col gap-2 text-sm text-white/60" aria-label="Footer">
             <span className="section-label mb-2 text-lime">Browse</span>
-            <a href="/books" className="transition-colors hover:text-white">Books</a>
-            <a href="/levels" className="transition-colors hover:text-white">Levels</a>
-            <a href="/categories" className="transition-colors hover:text-white">Categories</a>
+            <Link href="/books" className="transition-colors hover:text-white">Books</Link>
+            <Link href="/levels" className="transition-colors hover:text-white">Levels</Link>
+            <Link href="/categories" className="transition-colors hover:text-white">Categories</Link>
           </nav>
-          <nav className="flex flex-col gap-2 text-sm text-white/60" aria-label="Footer legal">
+          <nav className="flex flex-col gap-2 text-sm text-white/60" aria-label="Footer project">
             <span className="section-label mb-2 text-lime">Project</span>
-            <a href="/about" className="transition-colors hover:text-white">About</a>
-            <a href="/legal" className="transition-colors hover:text-white">Licensing</a>
+            <Link href="/about" className="transition-colors hover:text-white">About</Link>
           </nav>
+          </div>
         </div>
         <div className="mt-12 flex items-center justify-between border-t border-white/10 pt-6">
           <p className="font-mono text-xs text-white/40">© {new Date().getFullYear()} HackShelf</p>

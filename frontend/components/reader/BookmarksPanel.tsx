@@ -105,6 +105,17 @@ export function BookmarksPanel({ bookId, currentSlug }: { bookId: string; curren
         >
           {create.isPending ? "Saving…" : "Bookmark this chapter"}
         </button>
+        {/* Immediate feedback: success (after optimistic insert) or failure. */}
+        {create.isSuccess && !create.isPending && (
+          <p className="meta-line" role="status">
+            Bookmark added ✓
+          </p>
+        )}
+        {create.isError && (
+          <p className="meta-line text-rose" role="alert">
+            Couldn&apos;t add bookmark — please try again.
+          </p>
+        )}
       </form>
 
       {bookmarks.isLoading ? (

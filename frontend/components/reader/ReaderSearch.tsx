@@ -54,7 +54,7 @@ export function ReaderSearch({ contentRef }: { contentRef: React.RefObject<HTMLE
         Find
       </button>
       {count !== null && searched && (
-        <span className="meta-line flex items-center" role="status">
+        <span className="meta-line hidden items-center sm:flex" role="status">
           {count} match{count === 1 ? "" : "es"}
         </span>
       )}

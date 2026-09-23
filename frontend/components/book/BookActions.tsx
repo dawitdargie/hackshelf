@@ -1,24 +1,32 @@
 "use client";
 
 // HackShelf — book actions (Phase 16): Read button, save-to-library,
-// personal rating widget. All authenticated actions disabled until login.
+// personal rating widget. Authenticated actions redirect to login.
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useSaveBook, useUnsaveBook, useLibrary } from "@/hooks/useLibrary";
-import { useUpsertRating, useDeleteRating } from "@/hooks/useReviews";
+import {
+  useUpsertRating,
+  useDeleteRating,
+  useMyRating,
+} from "@/hooks/useReviews";
 
 export function BookActions({ bookId, slug }: { bookId: string; slug: string }) {
   const { status } = useAuth();
+  const router = useRouter();
   const library = useLibrary();
   const save = useSaveBook();
   const unsave = useUnsaveBook();
   const upsertRating = useUpsertRating(bookId);
   const deleteRating = useDeleteRating(bookId);
+  const myRating = useMyRating(bookId, status === "authenticated");
 
   const isSaved = (library.data?.saved_books ?? []).some((b) => b.id === bookId);
   const saving = save.isPending || unsave.isPending;
   const ratingPending = upsertRating.isPending || deleteRating.isPending;
+  const myRatingValue = myRating.data?.rating ?? 0;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -49,40 +57,69 @@ export function BookActions({ bookId, slug }: { bookId: string; slug: string }) 
         </button>
       ) : (
         <Link
-          href="/login?next=/books"
+          href={`/login?next=/books/${slug}`}
           className="inline-flex items-center rounded-lg border border-line-2 bg-paper px-5 py-3 text-sm font-semibold text-ink-3 transition-all hover:border-ink hover:text-ink"
         >
           Log in to save
         </Link>
       )}
 
-      {/* Personal rating */}
-      {status === "authenticated" ? (
-        <div className="flex items-center gap-1.5" role="group" aria-label="Rate this book">
-          {[1, 2, 3, 4, 5].map((star) => (
+      {/* Personal rating — visible to everyone; visitors are sent to login */}
+      <div
+        className="flex items-center gap-1.5"
+        role="group"
+        aria-label="Rate this book"
+      >
+        <span className="meta-line mr-1">Rate:</span>
+        {[1, 2, 3, 4, 5].map((star) => {
+          const filled = star <= myRatingValue;
+          return (
             <button
               key={star}
               type="button"
-              disabled={ratingPending}
-              aria-label={`Rate ${star} out of 5`}
-              onClick={() => upsertRating.mutate(star)}
-              className="p-0.5 text-lg leading-none transition-transform hover:scale-110 disabled:opacity-40"
+              disabled={status === "authenticated" && (ratingPending || myRating.isLoading)}
+              aria-label={
+                filled ? `Your rating: ${star} out of 5` : `Rate ${star} out of 5`
+              }
+              onClick={() => {
+                if (status !== "authenticated") {
+                  router.push(`/login?next=/books/${slug}`);
+                  return;
+                }
+                upsertRating.mutate(star);
+              }}
+              className={`text-lg leading-none transition-transform hover:scale-110 disabled:opacity-40 ${
+                filled ? "text-amber" : "text-line-2 hover:text-amber"
+              }`}
             >
-              <span className="text-amber">★</span>
+              ★
             </button>
-          ))}
-          {deleteRating.isPending ? null : (
+          );
+        })}
+        {status === "authenticated" && myRatingValue > 0 && (
+          <>
+            <span className="meta-line ml-1">
+              <strong>{myRatingValue}/5</strong>
+            </span>
             <button
               type="button"
               onClick={() => deleteRating.mutate()}
               disabled={ratingPending}
-              className="ml-2 text-xs text-muted underline underline-offset-2 transition-colors hover:text-ink disabled:opacity-40"
+              className="text-xs text-muted underline underline-offset-2 transition-colors hover:text-ink disabled:opacity-40"
             >
               remove
             </button>
-          )}
-        </div>
-      ) : null}
+          </>
+        )}
+        {status !== "authenticated" && (
+          <Link
+            href={`/login?next=/books/${slug}`}
+            className="text-xs text-muted underline underline-offset-2 transition-colors hover:text-ink"
+          >
+            log in to rate
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

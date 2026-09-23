@@ -74,7 +74,37 @@ export function useCreateBookmark(bookId: string) {
         location: input.location,
         note: input.note ?? "",
       }),
-    onSuccess: () => {
+    onMutate: async (input) => {
+      // Optimistic insert: the panel updates the instant the user bookmarks,
+      // then reconciles with the server response on settle.
+      await qc.cancelQueries({ queryKey: ["bookmarks"] });
+      const optimistic: Bookmark = {
+        id: `temp-${Date.now()}`,
+        book_id: bookId,
+        location: input.location,
+        note: input.note ?? "",
+        created_at: new Date().toISOString(),
+      };
+      const prevBook = qc.getQueryData<Bookmark[]>(["bookmarks", bookId]);
+      const prevAll = qc.getQueryData<Bookmark[]>(["bookmarks"]);
+      qc.setQueryData<Bookmark[]>(["bookmarks", bookId], [
+        ...(prevBook ?? []),
+        optimistic,
+      ]);
+      qc.setQueryData<Bookmark[]>(["bookmarks"], [...(prevAll ?? []), optimistic]);
+      return { prevBook, prevAll };
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx?.prevBook) qc.setQueryData(["bookmarks", bookId], ctx.prevBook);
+      if (ctx?.prevAll) qc.setQueryData(["bookmarks"], ctx.prevAll);
+    },
+    onSuccess: (created) => {
+      // Replace the temp optimistic row with the server's canonical record.
+      qc.setQueryData<Bookmark[]>(["bookmarks", bookId], (old) =>
+        old?.map((b) => (b.id.startsWith("temp-") ? created : b)) ?? [created],
+      );
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["bookmarks"] });
     },
   });
@@ -85,9 +115,29 @@ export function useDeleteBookmark(bookId?: string) {
   return useMutation({
     mutationFn: (bookmarkId: string) =>
       api.deleteAuthed<void>(`/me/bookmarks/${bookmarkId}`),
-    onSuccess: () => {
+    onMutate: async (bookmarkId) => {
+      // Optimistic removal so the list reacts immediately.
+      await qc.cancelQueries({ queryKey: ["bookmarks"] });
+      const prevBook = bookId
+        ? qc.getQueryData<Bookmark[]>(["bookmarks", bookId])
+        : undefined;
+      const prevAll = qc.getQueryData<Bookmark[]>(["bookmarks"]);
+      if (bookId) {
+        qc.setQueryData<Bookmark[]>(["bookmarks", bookId], (old) =>
+          old?.filter((b) => b.id !== bookmarkId),
+        );
+      }
+      qc.setQueryData<Bookmark[]>(["bookmarks"], (old) =>
+        old?.filter((b) => b.id !== bookmarkId),
+      );
+      return { prevBook, prevAll };
+    },
+    onError: (_err, _id, ctx) => {
+      if (bookId && ctx?.prevBook) qc.setQueryData(["bookmarks", bookId], ctx.prevBook);
+      if (ctx?.prevAll) qc.setQueryData(["bookmarks"], ctx.prevAll);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["bookmarks"] });
-      if (bookId) qc.invalidateQueries({ queryKey: ["bookmarks", bookId] });
     },
   });
 }
