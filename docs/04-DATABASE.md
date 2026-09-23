@@ -47,13 +47,14 @@ Stores registered users.
 | `username` | VARCHAR(50) | UNIQUE, NOT NULL |
 | `email` | VARCHAR(255) | UNIQUE, NOT NULL |
 | `password_hash` | TEXT | NOT NULL |
+| `role` | VARCHAR(20) | NOT NULL, DEFAULT 'user' (migration 018; indexed via `idx_users_role`) |
 | `created_at` | TIMESTAMP | NOT NULL |
 | `updated_at` | TIMESTAMP | NOT NULL |
 
 **Notes**
 * Passwords are stored only as secure hashes.
 * Email and username must be unique.
-* Users do not have admin roles because there is no admin system.
+* `role` is either `user` (default) or `admin`. Promotion is done directly in the database; the admin middleware reads the role on every admin request, so promotion and demotion take effect immediately.
 
 ---
 
@@ -106,10 +107,9 @@ Stores the four book levels.
 | `sort_order` | SMALLINT | UNIQUE, NOT NULL |
 
 Initial levels:
-* `1` → Cybersecurity Basics
-* `2` → Hacker Fundamentals
-* `3` → Penetration Testing
-* `4` → Advanced Hacking
+* `1` → Beginner
+* `2` → Intermediate
+* `3` → Advanced
 
 `sort_order` determines their display order.
 

@@ -1,4 +1,9 @@
-# HackShelf — Implementation Plan
+# HackShelf Implementation Plan
+
+> **Status**: the core platform (phases 1 through 21: auth, catalog, reader,
+> library, ratings and reviews, search, seeding) is implemented, plus the
+> role-gated admin panel for full catalog management (user roles, admin API,
+> book editor with live preview). This document is kept as the original plan.
 
 ## 1. Purpose
 This document defines the phased implementation plan for HackShelf.

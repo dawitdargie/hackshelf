@@ -15,7 +15,7 @@ PostgreSQL
 
 Book content is served from hosted chapter files (Markdown/HTML) in the platform. Only books with redistribution rights (or author permission) are cataloged; the official source is shown as attribution only.
 
-The system is intentionally simple. There is no admin application, payment system, CMS, or microservice architecture.
+The system is intentionally simple. There is no payment system, CMS, or microservice architecture; the only admin surface is the role-gated catalog panel at `/admin`.
 
 ## 2. System Components
 
@@ -449,16 +449,10 @@ PostgreSQL
 This keeps database credentials and business logic on the server.
 
 ## 17. Book Data Management
-There is no admin interface.
-Initial books are added through:
+Book content reaches the system in two ways.
 
-```
-Database migrations
-        OR
-Seed scripts
-```
-
-Example:
+### Initial catalog: the seeder
+Initial books are added through the idempotent seeder:
 
 ```
 cmd/
@@ -475,7 +469,7 @@ The seed process creates:
 * Relationships
 * Initial ratings/reviews where appropriate
 
-After deployment, the catalog can be updated through seed/migration changes.
+After deployment, the catalog can be updated through the seeder or through the admin panel (see section 17 above and the admin API in `docs/05-API.md`).
 
 ## 18. External Services
 The system should minimize external dependencies.

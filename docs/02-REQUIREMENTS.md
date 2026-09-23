@@ -14,8 +14,10 @@ Can discover and read books but cannot use personal features.
 A user with an account.
 Can use personal library and interaction features.
 
-### System Maintainer
-There is no admin dashboard. Books are managed through seed data/database migrations.
+### System Maintainer (Admin)
+A user whose `role` column is set to `admin` in the database.
+Manages the book catalog through the admin panel at `/admin` (see the Admin Requirements section).
+Promotion is done directly in the database; the role is checked on every admin API request, so changes take effect immediately.
 
 ## 3. Public Requirements
 Visitors MUST be able to:
@@ -73,12 +75,11 @@ Every book MUST have:
 A book MUST have a valid legitimate source.
 
 ## 6. Book Levels
-Books MUST belong to one of four levels:
+Books MUST belong to one of three levels:
 
-* **Level 1** — Cybersecurity Basics
-* **Level 2** — Hacker Fundamentals
-* **Level 3** — Penetration Testing
-* **Level 4** — Advanced Hacking
+* **Level 1** — Beginner
+* **Level 2** — Intermediate
+* **Level 3** — Advanced
 
 Levels are used for catalog organization only.
 The system MUST NOT treat levels as mandatory courses or learning paths.

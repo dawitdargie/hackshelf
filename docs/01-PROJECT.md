@@ -39,8 +39,9 @@ Has an account.
 Can use personal features such as saved books, ratings, reviews, bookmarks, and reading progress.
 
 #### Administrator
-There is no admin interface.
-The book catalog is maintained through database seed data/migrations.
+Has the `admin` role in the database.
+Manages the catalog through the admin panel at `/admin`: creating and editing books and chapters, managing authors, categories and topics, and removing books.
+Promotion to admin is done directly in the database; there is no UI for it.
 
 ## 4. Core Product Concept
 The platform is organized around books, not courses.
@@ -64,16 +65,13 @@ The catalog uses levels to make discovery easier:
 
 ```
 Level 1
-Cybersecurity Basics
+Beginner
         ↓
 Level 2
-Hacker Fundamentals
+Intermediate
         ↓
 Level 3
-Penetration Testing
-        ↓
-Level 4
-Advanced Hacking
+Advanced
 ```
 
 These levels do not represent courses or required learning paths.
@@ -111,7 +109,7 @@ Every book should have:
 
 ## 6. Book Levels
 
-### Level 1 — Cybersecurity Basics
+### Level 1 — Beginner
 Introduces fundamental concepts.
 Categories may include:
 
@@ -121,33 +119,22 @@ Categories may include:
 * Operating Systems
 * Programming Fundamentals
 
-### Level 2 — Hacker Fundamentals
-Introduces common security and hacking concepts.
+### Level 2 — Intermediate
+Introduces common security and hacking concepts and practical testing.
 Categories may include:
 
 * Reconnaissance
 * OSINT
 * Security Tools
 * Web Fundamentals
-* Kali Linux
-* Security Concepts
-
-### Level 3 — Penetration Testing
-Focuses on practical penetration testing.
-Categories may include:
-
 * Web Pentesting
 * Network Pentesting
 * API Pentesting
 * Vulnerability Assessment
-* Burp Suite
-* Nmap
-* Metasploit
-* Active Directory
-* Wireless Security
+* Security Concepts
 
-### Level 4 — Advanced Hacking
-Contains advanced offensive-security material.
+### Level 3 — Advanced
+Contains advanced offensive-security and deep-dive material.
 Categories may include:
 
 * Exploit Development
@@ -450,8 +437,7 @@ Attribution link to the official source (never the reading path)
 * ❌ AI tutor
 * ❌ AI recommendations
 * ❌ Social network
-* ❌ Admin dashboard
-* ❌ Complex content management system
+* ❌ Complex content management system (the built-in admin panel is intentionally minimal, focused only on the book catalog)
 * ❌ Gamification
 
 ## 19. Success Criteria

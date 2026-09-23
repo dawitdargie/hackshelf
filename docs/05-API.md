@@ -191,7 +191,8 @@ The refresh token is revoked.
   "data": {
     "id": "uuid",
     "username": "dawit",
-    "email": "dawit@example.com"
+    "email": "dawit@example.com",
+    "role": "user"
   }
 }
 ```
@@ -256,7 +257,13 @@ The API should return a generic response regardless of whether the email exists.
       "cover_url": "...",
       "level": {
         "id": 3,
-        "name": "Penetration Testing"
+        "name": "Advanced",
+        "slug": "advanced"
+      },
+      "category": {
+        "id": "uuid",
+        "name": "Web Pentesting",
+        "slug": "web-pentesting"
       },
       "rating": {
         "average": 4.7,
@@ -705,6 +712,13 @@ Require a valid access token.
 * `ratings`
 * `reviews`
 
+### Admin endpoints
+Require a valid access token AND the `admin` role in the `users` table.
+* `/admin/books` (list, create, update, delete)
+* `/admin/categories`
+* `/admin/topics`
+* `/admin/authors`
+
 ---
 
 ## 28. Authorization Rules
@@ -751,6 +765,69 @@ The API MUST validate:
   * Valid topic
   * Valid sort option
   * Valid pagination values
+
+---
+
+## 29b. Admin API
+
+Admin endpoints manage the book catalog. Every request requires a valid access token AND the `admin` role in the `users` table; otherwise the API answers `403 FORBIDDEN`. The role is read from the database on each request, so promotion or demotion takes effect immediately.
+
+### List Books
+`GET /api/v1/admin/books`
+
+Returns all books with editable metadata, taxonomy slug arrays and chapter counts.
+
+### Get Book
+`GET /api/v1/admin/books/:bookId`
+
+Returns the full book: metadata plus all chapters ordered by `chapter_order`. Unknown ids return `404 BOOK_NOT_FOUND`.
+
+### Create Book
+`POST /api/v1/admin/books`
+
+```json
+{
+  "title": "OWASP Top 10:2021",
+  "slug": "owasp-top-10-2021",
+  "description": "The most critical security risks to web applications.",
+  "level": "beginner",
+  "authors": ["owasp-foundation"],
+  "categories": ["web-security"],
+  "topics": ["injection"],
+  "source_url": "https://github.com/OWASP/Top10",
+  "license": "CC BY-SA 4.0",
+  "publication_date": "2021-09-24",
+  "cover_url": "https://example.com/cover.jpg",
+  "chapters": [
+    { "slug": "introduction", "title": "Introduction", "content": "# Introduction\n\n..." }
+  ]
+}
+```
+
+Notes:
+* Validation failures return `422 VALIDATION_ERROR` with a human-readable message.
+* A slug already owned by a different book returns `409 CONFLICT`.
+* Empty chapter slugs are derived from titles; empty titles fall back to the first `#` heading in the content, then the humanized slug, matching the seeder.
+* The book and its chapters are written in a single transaction.
+
+### Update Book
+`PUT /api/v1/admin/books/:bookId`
+
+Same body as create. Chapters are replaced wholesale in one transaction, satisfying both the unique chapter slug and chapter order constraints.
+
+### Delete Book
+`DELETE /api/v1/admin/books/:bookId`
+
+Removes the book; chapters, bookmarks, progress, ratings, reviews and saved-book entries disappear through cascade deletes. Unknown ids return `404`.
+
+### Create Taxonomy Entries
+`POST /api/v1/admin/categories`, `POST /api/v1/admin/topics`, `POST /api/v1/admin/authors`
+
+```json
+{ "name": "Mobile Security" }
+```
+
+Upserts by slug and answers `201` with the stored row (`{ "id", "name", "slug" }`), so an admin form can select the returned slug even when the entry already existed. A name held by a different slug returns `409 CONFLICT`.
 
 ---
 
@@ -827,6 +904,16 @@ PROGRESS
 GET    /me/books/:bookId/progress
 PUT    /me/books/:bookId/progress
 DELETE /me/books/:bookId/progress
+
+ADMIN (requires admin role)
+GET    /admin/books
+GET    /admin/books/:bookId
+POST   /admin/books
+PUT    /admin/books/:bookId
+DELETE /admin/books/:bookId
+POST   /admin/categories
+POST   /admin/topics
+POST   /admin/authors
 ```
 
 ---

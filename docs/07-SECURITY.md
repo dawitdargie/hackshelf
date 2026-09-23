@@ -464,14 +464,16 @@ The same ownership principle applies to:
 
 ## 26. Book Data Security
 
-Because there is no admin dashboard:
+The admin surface is small and strictly gated:
 
-- Books are not created through a public API.
-- Books are seeded/updated through controlled development scripts.
-- Public users cannot modify book metadata.
-- Public users cannot modify categories, topics, levels, or authors.
+- Admin endpoints require a valid access token AND the `admin` role in the `users` table.
+- The middleware reads the role from the database on every admin request, so promoting or demoting a user takes effect immediately.
+- Public users cannot create, modify or delete books, chapters, categories, topics, levels, or authors through the public API.
+- The initial catalog is seeded through controlled development scripts.
 
-This significantly reduces the attack surface.
+Admin book mutations are validated (slug format, known level slug, non-empty chapter content) and applied in a single transaction, which keeps the catalog consistent.
+
+This keeps the attack surface small.
 
 ## 27. Dependency Security
 
