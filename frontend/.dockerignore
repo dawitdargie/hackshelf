@@ -1,0 +1,7 @@
+# Build context exclusions for the frontend image.
+node_modules
+.next
+out
+.env.local
+.env.*.local
+*.log
